@@ -35,7 +35,9 @@ const root = createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <AppProvider>
           <a className="skip-link" href="#main-content">
             Đến nội dung chính

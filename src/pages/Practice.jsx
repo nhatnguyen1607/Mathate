@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -20,6 +20,8 @@ import { useApp } from "../context/AppContext";
 import { steps, difficulties } from "../../shared/catalog";
 import { TopicIcon, ErrorBox, Spinner } from "../components/ui";
 import RobotCompanion from "../components/RobotCompanion";
+import TypewriterMessage from "../components/TypewriterMessage";
+import { TTS_TEXT_FALLBACK_MS, speechText } from "../../shared/playback.js";
 export default function Practice() {
   const { id } = useParams(),
     { user, demo, ready, refresh } = useApp();
@@ -30,6 +32,12 @@ export default function Practice() {
     [input, setInput] = useState(""),
     [speaking, setSpeaking] = useState(null),
     [listening, setListening] = useState(false),
+    [typingMessage, setTypingMessage] = useState(null),
+    [typingPaused, setTypingPaused] = useState(false),
+    [speechError, setSpeechError] = useState(""),
+    [autoRead, setAutoRead] = useState(
+      () => localStorage.getItem("mathate-auto-read") !== "false",
+    ),
     [speechPhase, setSpeechPhase] = useState("idle"),
     [voiceGender, setVoiceGender] = useState(() =>
       localStorage.getItem("mathate-tts-gender") === "MALE" ? "MALE" : "FEMALE",
@@ -39,7 +47,17 @@ export default function Practice() {
     request = useRef(null),
     mounted = useRef(true),
     sendingRef = useRef(false),
-    readingRequest = useRef(0);
+    readingRequest = useRef(0),
+    typingTimer = useRef(null),
+    seenReplies = useRef({ sessionId: null, lastId: null });
+  const scrollToBottom = useCallback(() => {
+    const box = bottom.current?.parentElement;
+    if (box) box.scrollTo({ top: box.scrollHeight, behavior: "instant" });
+  }, []);
+  function clearTypingTimer() {
+    clearTimeout(typingTimer.current);
+    typingTimer.current = null;
+  }
   async function load() {
     setLoading(true);
     setError("");
@@ -57,6 +75,7 @@ export default function Practice() {
     return () => {
       mounted.current = false;
       readingRequest.current++;
+      clearTypingTimer();
       stopSpeech();
       recognition.current?.abort();
     };
@@ -65,6 +84,29 @@ export default function Practice() {
     const box = bottom.current?.parentElement;
     if (box) box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
   }, [session?.messages.length, sending]);
+  const lastReply = session?.messages
+    .filter((message) => message.role === "model")
+    .at(-1);
+  useEffect(() => {
+    if (!session || session.id !== id || !lastReply) return;
+    const previous = seenReplies.current;
+    if (previous.sessionId === id && previous.lastId === lastReply.id) return;
+    const firstVisit = previous.sessionId !== id;
+    seenReplies.current = { sessionId: id, lastId: lastReply.id };
+    // Do not replay old conversations; welcome is presented once per browser session.
+    if (firstVisit) {
+      const welcomeKey = `mathate-welcome:${id}`;
+      if (session.messages.length !== 1 || sessionStorage.getItem(welcomeKey))
+        return;
+      sessionStorage.setItem(welcomeKey, "seen");
+    }
+    if (autoRead) {
+      void read(lastReply.text, lastReply.id, true);
+    } else {
+      setTypingMessage(lastReply.id);
+      setTypingPaused(false);
+    }
+  }, [session?.id, lastReply?.id, id]);
   async function send(hint = false) {
     const text = hint ? "Mimo ơi, cho mình một gợi ý nhé." : input.trim();
     if (!text || sendingRef.current || session?.completed) return;
@@ -72,9 +114,13 @@ export default function Practice() {
     setSending(true);
     setError("");
     readingRequest.current++;
+    clearTypingTimer();
     stopSpeech();
     setSpeaking(null);
     setSpeechPhase("idle");
+    setSpeechError("");
+    setTypingMessage(null);
+    setTypingPaused(false);
     recognition.current?.stop();
     if (
       !request.current ||
@@ -108,42 +154,86 @@ export default function Practice() {
       if (mounted.current) setSending(false);
     }
   }
-  async function read(text, key) {
-    if (speaking === key) {
+  async function read(text, key, autoStartTypewriter = false) {
+    clearTypingTimer();
+    if (speaking === key && !autoStartTypewriter) {
       readingRequest.current++;
       stopSpeech();
       setSpeaking(null);
       setSpeechPhase("idle");
+      setTypingPaused(false);
       return;
     }
     const ownRequest = ++readingRequest.current;
-    setError("");
+    setSpeechError("");
     setSpeaking(key);
     setSpeechPhase("loading");
+    let typewriterStarted = false;
+    const startTyping = () => {
+      if (
+        !autoStartTypewriter ||
+        typewriterStarted ||
+        !mounted.current ||
+        ownRequest !== readingRequest.current
+      )
+        return;
+      typewriterStarted = true;
+      setTypingMessage(key);
+      setTypingPaused(false);
+    };
+    if (autoStartTypewriter) {
+      setTypingMessage(key);
+      setTypingPaused(true);
+      typingTimer.current = setTimeout(startTyping, TTS_TEXT_FALLBACK_MS);
+    } else setTypingPaused(false);
     const done = () => {
       if (mounted.current && ownRequest === readingRequest.current) {
+        clearTypingTimer();
+        startTyping();
         setSpeaking(null);
         setSpeechPhase("idle");
       }
     };
     const fail = (e) => {
       if (mounted.current && ownRequest === readingRequest.current) {
-        setError(e.message);
+        clearTypingTimer();
+        setSpeechError(
+          e.name === "NotAllowedError"
+            ? "Trình duyệt đang chặn tự đọc. Bạn nhấn nút loa để nghe nhé."
+            : e.message,
+        );
+        startTyping();
         done();
       }
     };
     try {
-      await speak(text, {
+      await speak(key === "problem" ? text : speechText(text), {
         voiceGender,
         onStart: () => {
-          if (mounted.current && ownRequest === readingRequest.current)
+          if (mounted.current && ownRequest === readingRequest.current) {
+            clearTypingTimer();
+            startTyping();
             setSpeechPhase("playing");
+          }
         },
         onEnd: done,
         onError: fail,
       });
     } catch (e) {
       fail(e);
+    }
+  }
+  function toggleAutoRead() {
+    const enabled = !autoRead;
+    setAutoRead(enabled);
+    localStorage.setItem("mathate-auto-read", String(enabled));
+    if (!enabled) {
+      readingRequest.current++;
+      clearTypingTimer();
+      stopSpeech();
+      setSpeaking(null);
+      setSpeechPhase("idle");
+      setTypingPaused(false);
     }
   }
   function selectVoice(value) {
@@ -269,7 +359,20 @@ export default function Practice() {
                     {m.role === "model" ? "Mimo" : "Bạn"}
                   </span>
                   <div className="message-bubble">
-                    <p>{m.text}</p>
+                    {m.role === "model" && m.id === typingMessage ? (
+                      <TypewriterMessage
+                        text={m.text}
+                        paused={typingPaused}
+                        onComplete={() =>
+                          setTypingMessage((current) =>
+                            current === m.id ? null : current,
+                          )
+                        }
+                        onTextUpdate={scrollToBottom}
+                      />
+                    ) : (
+                      <p>{m.text}</p>
+                    )}
                     {m.role === "model" && (
                       <button
                         className={`message-speak ${speaking === m.id ? "active" : ""}`}
@@ -424,13 +527,23 @@ export default function Practice() {
                 ))}
               </div>
               <p role="status">
-                {speechPhase === "loading"
-                  ? "Đang chuẩn bị giọng Việt…"
-                  : speechPhase === "playing"
-                    ? "Nhấn lại loa để dừng và đổi giọng."
-                    : "Chọn giọng bạn thích, rồi nhấn loa nhé."}
+                {speechError ||
+                  (speechPhase === "loading"
+                    ? "Đang chuẩn bị giọng Việt…"
+                    : speechPhase === "playing"
+                      ? "Nhấn lại loa để dừng và đổi giọng."
+                      : "Chọn giọng bạn thích, rồi nhấn loa nhé.")}
               </p>
             </fieldset>
+            <button
+              type="button"
+              className="auto-read-toggle"
+              aria-pressed={autoRead}
+              onClick={toggleAutoRead}
+            >
+              {autoRead ? <Volume2 size={16} /> : <VolumeX size={16} />}Tự đọc:{" "}
+              {autoRead ? "bật" : "tắt"}
+            </button>
           </div>
           <section className="learning-steps">
             <h2>Từng bước, mình sẽ làm được</h2>

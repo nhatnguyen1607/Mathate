@@ -52,13 +52,18 @@ Web config không bao gồm quyền Firebase Admin. Nếu thiếu thông tin nà
 `GEMINI_API_KEY` chỉ được đọc trên backend. Model mặc định `gemini-2.5-flash`, có thể đổi qua `GEMINI_MODEL`.
 
 ```powershell
+node scripts/diagnose-gemini.mjs
 node scripts/check-ai.mjs
 node scripts/check-ai.mjs fractions
 ```
 
-Mỗi lệnh gọi Gemini để thử tạo đề và một lượt chat bằng service gốc. Không in khóa hoặc nội dung lời giải ra log. Khi chạy trong sandbox cần quyền truy cập mạng cho tiến trình backend.
+`diagnose-gemini` gọi một câu ngắn để kiểm tra kết nối. `check-ai` thử tạo đề và một lượt chat bằng service gốc. Không in khóa hoặc nội dung lời giải ra log. Khi chạy trong sandbox cần quyền truy cập mạng cho tiến trình backend.
+
+Backend phân biệt khóa không hợp lệ/bị Google chặn, thiếu quyền, sai model, quota, timeout và dịch vụ tạm lỗi bằng mã `GEMINI_*`; không trả nguyên phản hồi Google hay khóa ra client. HTTP 408/429/500/502/503/504 được thử lại một lần sau 1,5 giây. Không thử lại lỗi khóa, quyền hoặc model. Nếu đổi `.env`, khởi động lại backend để nạp cấu hình mới.
 
 Giọng đọc dùng lại cấu hình Math-AI: nữ `vi-VN-Wavenet-A`, nam `vi-VN-Wavenet-B`, MP3, `speakingRate: 1.0`, `pitch: 0`. Chọn nam/nữ bên dưới Mimo; lựa chọn được lưu trên trình duyệt. Có cache riêng theo giọng, chia văn bản dài theo giới hạn byte và hủy lượt cũ khi dừng/đổi bài.
+
+Phản hồi mới mặc định tự đọc và hiện chữ bằng hook `useTypewriter` sao chép nguyên văn từ Math-AI: 120 ms mỗi token (từ hoặc khoảng trắng), bắt đầu khi âm thanh phát hoặc sau 2 giây nếu còn chờ TTS. Có nút **Hiện toàn bộ**, dừng loa và **Tự đọc: bật/tắt**. Mở lại hội thoại cũ không tự đọc/chạy chữ lại; chế độ giảm chuyển động hiện toàn bộ văn bản. Trình duyệt có thể chặn autoplay; khi đó giao diện hướng dẫn nhấn loa, chữ vẫn tiếp tục hiện.
 
 Cloud TTS dùng cấu hình riêng với Firebase Admin:
 

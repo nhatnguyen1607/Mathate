@@ -275,5 +275,8 @@ app.use((err, req, res, next) => {
   );
   res.status(err.status || 500).json({
     error: err.status ? err.message : "Có chút trục trặc. Bạn thử lại sau nhé.",
+    ...(typeof err.code === "string" && err.code.startsWith("GEMINI_")
+      ? { code: err.code }
+      : {}),
   });
 });

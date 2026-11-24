@@ -1,42 +1,90 @@
-export async function generateText(prompt, { json = false } = {}) {
-  if (!process.env.GEMINI_API_KEY)
+import { geminiHTTPError } from "./gemini-errors.js";
+export async function generateText(
+  prompt,
+  {
+    json = false,
+    fetchImpl = fetch,
+    wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  } = {},
+) {
+  const key = process.env.GEMINI_API_KEY?.trim();
+  const model = (process.env.GEMINI_MODEL || "gemini-2.5-flash")
+    .trim()
+    .replace(/^models\//, "");
+  if (!/^gemini-[a-zA-Z0-9._-]+$/.test(model))
+    throw Object.assign(
+      new Error(
+        "GEMINI_MODEL chưa đúng định dạng tên model Gemini. Kiểm tra cấu hình máy chủ.",
+      ),
+      { status: 503, code: "GEMINI_MODEL_INVALID" },
+    );
+  if (!key)
     throw Object.assign(
       new Error("Chưa cấu hình Gemini. Vui lòng thử chế độ trải nghiệm."),
-      { status: 503 },
+      { status: 503, code: "GEMINI_NOT_CONFIGURED" },
     );
   let response;
   for (let attempt = 0; attempt < 2; attempt++) {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || "gemini-2.5-flash"}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
-        },
-        signal: AbortSignal.timeout(45000),
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.55,
-            ...(json ? { responseMimeType: "application/json" } : {}),
-            maxOutputTokens: 8192,
+    try {
+      response = await fetchImpl(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": key,
           },
-        }),
-      },
-    );
-    if (![429, 503].includes(response.status) || attempt === 1) break;
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+          signal: AbortSignal.timeout(45000),
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.55,
+              ...(json ? { responseMimeType: "application/json" } : {}),
+              maxOutputTokens: 8192,
+            },
+          }),
+        },
+      );
+    } catch (error) {
+      throw Object.assign(
+        new Error(
+          error.name === "TimeoutError"
+            ? "Gemini phản hồi quá lâu. Bạn thử lại nhé."
+            : "Máy chủ chưa kết nối được Google Gemini. Kiểm tra mạng hoặc proxy của backend.",
+        ),
+        {
+          status: 503,
+          code:
+            error.name === "TimeoutError"
+              ? "GEMINI_TIMEOUT"
+              : "GEMINI_NETWORK_ERROR",
+          model,
+        },
+      );
+    }
+    if (
+      ![408, 429, 500, 502, 503, 504].includes(response.status) ||
+      attempt === 1
+    )
+      break;
+    await response.arrayBuffer().catch(() => {});
+    await wait(1500 * 2 ** attempt);
   }
-  if (!response.ok)
-    throw Object.assign(
-      new Error(
-        response.status === 429
-          ? "Mimo đang có nhiều bạn ghé thăm. Bạn thử lại sau một chút nhé."
-          : "Chưa kết nối được Gemini. Vui lòng kiểm tra khóa và model trong cấu hình máy chủ.",
-      ),
-      { status: 502 },
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const error = geminiHTTPError(response.status, body, model);
+    console.error(
+      "[Gemini]",
+      JSON.stringify({
+        code: error.code,
+        httpStatus: error.providerHttpStatus,
+        providerStatus: error.providerStatus,
+        reason: error.providerReason,
+        model,
+      }),
     );
+    throw error;
+  }
   const data = await response.json();
   const text =
     data.candidates?.[0]?.content?.parts
@@ -46,7 +94,7 @@ export async function generateText(prompt, { json = false } = {}) {
   if (!text.trim())
     throw Object.assign(
       new Error("Mimo chưa nhận được nội dung. Bạn thử lại nhé."),
-      { status: 502 },
+      { status: 502, code: "GEMINI_EMPTY_RESPONSE" },
     );
   return text;
 }
@@ -59,7 +107,7 @@ export async function generateJSON(prompt, schema) {
   } catch {
     throw Object.assign(
       new Error("Mimo chưa tạo được nội dung phù hợp. Bạn thử lại nhé."),
-      { status: 502 },
+      { status: 502, code: "GEMINI_INVALID_OUTPUT" },
     );
   }
 }
