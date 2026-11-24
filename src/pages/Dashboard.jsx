@@ -17,7 +17,8 @@ import {
 import { useApp } from "../context/AppContext";
 import { difficulties, getLevel } from "../../shared/catalog";
 import { api } from "../lib/api";
-import { TopicIcon, Mascot, ErrorBox, Spinner } from "../components/ui";
+import { TopicIcon, ErrorBox, Spinner } from "../components/ui";
+import HeroMimo from "../components/HeroMimo";
 import useDialog from "../hooks/useDialog";
 const categories = [
   { id: "all", label: "Tất cả chủ đề" },
@@ -165,19 +166,7 @@ export default function Dashboard() {
                 <Check size={15} /> Học theo cách của bạn, từng bước một.
               </div>
             </div>
-            <div className="mascot-scene" aria-hidden="true">
-              <span className="orbit-symbol plus">+</span>
-              <span className="orbit-symbol multiply">×</span>
-              <span className="orbit-symbol divide">÷</span>
-              <span className="scene-spark one">
-                <Sparkles />
-              </span>
-              <span className="scene-spark two">
-                <Star />
-              </span>
-              <div className="mascot-ground" />
-              <Mascot />
-            </div>
+            <HeroMimo />
           </section>
           {unfinished && (
             <Link to={`/practice/${unfinished.id}`} className="continue-strip">

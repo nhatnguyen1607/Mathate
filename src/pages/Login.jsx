@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  getIdTokenResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -14,6 +15,8 @@ import { useApp } from "../context/AppContext";
 import { Logo } from "../components/Layout";
 import { Mascot, ErrorBox } from "../components/ui";
 const messages = {
+  "auth/user-disabled":
+    "Tài khoản đã bị khóa. Bạn liên hệ quản trị viên để được hỗ trợ nhé.",
   "auth/invalid-credential":
     "Email hoặc mật khẩu chưa đúng. Bạn kiểm tra lại nhé.",
   "auth/invalid-email": "Email chưa đúng định dạng.",
@@ -55,7 +58,10 @@ export default function Login() {
     setNotice("");
     try {
       await action();
-      navigate(destination);
+      const token = await getIdTokenResult(auth.currentUser, true);
+      navigate(token.claims.admin === true ? "/admin" : destination, {
+        replace: true,
+      });
     } catch (e) {
       setError(messages[e.code] || "Chưa đăng nhập được. Bạn thử lại sau nhé.");
     } finally {

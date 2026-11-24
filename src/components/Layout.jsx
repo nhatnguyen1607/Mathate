@@ -55,7 +55,7 @@ export default function Layout() {
   const current = location.pathname.startsWith("/practice")
     ? "Cùng Mimo giải toán"
     : links.find((l) => l.path === location.pathname)?.label ||
-      "Quản lý chủ đề";
+      "Quản trị Mathate";
   const level = getLevel(profile.xp),
     name =
       user?.displayName?.split(" ").at(-1) || (demo ? "Bạn nhỏ" : "Bạn nhỏ");
@@ -117,7 +117,7 @@ export default function Layout() {
               onClick={() => setMenu(false)}
             >
               <Settings2 size={20} />
-              Quản lý chủ đề
+              Quản trị Mathate
             </NavLink>
           )}
           {user || demo ? (

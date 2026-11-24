@@ -73,7 +73,7 @@ export function AppProvider({ children }) {
       const [p, t, h] = await Promise.all([
         api("/profile"),
         api("/topics"),
-        api("/history"),
+        user?.admin ? Promise.resolve([]) : api("/history"),
       ]);
       if (currentGeneration !== generation.current) return;
       setProfile(p);

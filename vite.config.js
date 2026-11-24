@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { Agent } from "node:http";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_FIREBASE_");
   const missing = [
@@ -35,7 +36,34 @@ export default defineConfig(({ mode }) => {
           "**/*service-account*.json",
         ],
       },
-      proxy: { "/api": "http://127.0.0.1:8081" },
+      proxy: {
+        "/api": {
+          target: "http://127.0.0.1:8081",
+          // Development backend may restart; do not reuse an idle upstream socket.
+          agent: new Agent({ keepAlive: false }),
+          configure(proxy) {
+            proxy.on("error", (_error, _request, response) => {
+              if (
+                !response ||
+                !("writeHead" in response) ||
+                response.writableEnded
+              )
+                return;
+              if (response.headersSent) return response.destroy();
+              response.writeHead(503, {
+                "Content-Type": "application/json; charset=utf-8",
+              });
+              response.end(
+                JSON.stringify({
+                  error:
+                    "Backend đang khởi động lại hoặc chưa kết nối được. Giữ terminal npm run dev mở, đợi vài giây rồi thử lại.",
+                  code: "BACKEND_UNAVAILABLE",
+                }),
+              );
+            });
+          },
+        },
+      },
     },
     build: {
       chunkSizeWarningLimit: 800,

@@ -8,6 +8,7 @@ import { auth, store, persistenceReady } from "./services/store.js";
 import { createAIProblem, processAITurn } from "./services/ai.js";
 import { demoProblem, demoReply } from "./services/demo.js";
 import { synthesizeSpeech, ttsConfigured } from "./services/tts.js";
+import { listAccounts, updateAccount } from "./services/accounts.js";
 export const app = express();
 app.disable("x-powered-by");
 app.use(express.json({ limit: "32kb" }));
@@ -48,7 +49,7 @@ app.use("/api", async (req, res, next) => {
         return res
           .status(401)
           .json({ error: "Bạn đăng nhập để lưu hành trình nhé." });
-      req.user = { ...(await auth.verifyIdToken(token)), demo: false };
+      req.user = { ...(await auth.verifyIdToken(token, true)), demo: false };
     }
     next();
   } catch {
@@ -70,6 +71,28 @@ const aiLimit = rateLimit({
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { error: "Mimo cần nghỉ một chút. Bạn thử lại sau nhé." },
+});
+app.get("/api/admin/accounts", admin, async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const query = z
+    .object({
+      query: z.string().trim().max(254).optional(),
+      pageToken: z.string().max(2000).optional(),
+    })
+    .parse(req.query);
+  res.json(await listAccounts(query));
+});
+app.patch("/api/admin/accounts/:uid", admin, async (req, res) => {
+  const uid = z.string().min(1).max(128).parse(req.params.uid);
+  const changes = z
+    .object({
+      displayName: z.string().trim().min(1).max(60).optional(),
+      disabled: z.boolean().optional(),
+    })
+    .strict()
+    .refine((value) => Object.keys(value).length > 0)
+    .parse(req.body);
+  res.json(await updateAccount(uid, changes, req.user.uid));
 });
 const topicSchema = z.object({
   name: z.string().trim().min(2).max(80),
