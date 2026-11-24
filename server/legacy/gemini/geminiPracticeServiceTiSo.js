@@ -1,0 +1,392 @@
+// Imported from Math-AI/src/services/gemini/geminiPracticeServiceTiSo.js. Prompt reference; see docs/ANALYSIS.md.
+import { GeminiPracticeService } from "./geminiPracticeService.js";
+import { EXAM_CONTEXTS, CHARACTER_GUIDE } from '../constants/examContexts.js';
+
+const extractJSON = (text) => {
+  try {
+    const startIndex = text.indexOf('{');
+    const endIndex = text.lastIndexOf('}');
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+      const jsonString = text.substring(startIndex, endIndex + 1);
+      return JSON.parse(jsonString);
+    }
+    return null;
+  } catch (error) {
+    console.warn('Lỗi khi parse JSON:', error);
+    return null;
+  }
+};
+
+export class GeminiPracticeServiceTiSo extends GeminiPracticeService {
+  constructor(...args) {
+    super(...args);
+    this._lastScenarioIndexByContext = new Map();
+    this._recentGeneratedByContext = new Map();
+  }
+
+  _extractNumbersFromText(text = "") {
+    if (!text || typeof text !== "string") return [];
+    const matches = text.match(/\d+(?:[.,]\d+)?/g) || [];
+    return [...new Set(matches)].slice(0, 12);
+  }
+
+  _rememberGeneratedProblem(contextId = "", text = "") {
+    if (!contextId || !text) return;
+    const prev = this._recentGeneratedByContext.get(contextId) || [];
+    const next = [text, ...prev].slice(0, 2);
+    this._recentGeneratedByContext.set(contextId, next);
+  }
+
+  _getRecentGeneratedProblems(contextId = "") {
+    return this._recentGeneratedByContext.get(contextId) || [];
+  }
+
+  _getBepAnConstraint() {
+    return `\n[QUY TẮC RIÊNG CHO BỐI CẢNH BỮA ĂN DINH DƯỠNG]\n- Chỉ dùng đại lượng dinh dưỡng: calo (kcal), gam (g), ki-lô-gam (kg), mililít (ml), lít (l).\n- Ưu tiên dạng: so sánh với mức khuyến nghị, kiểm tra có vượt ngưỡng cho phép hay không, lựa chọn phương án thực đơn tối ưu.\n- TUYỆT ĐỐI KHÔNG dùng dạng đếm số lượng kiểu: số bánh quy, số phần cơm, số cái/chiếc.\n- Câu hỏi cuối phải xoay quanh tỉ số/tỉ số phần trăm theo dữ liệu dinh dưỡng.`;
+  }
+
+  _buildAntiDuplicateGuidance({
+    startupProblem1 = "",
+    startupProblem2 = "",
+    recentGenerated = [],
+    problemNumber = 1
+  }) {
+    const sourceText = [startupProblem1, startupProblem2, ...recentGenerated]
+      .filter(Boolean)
+      .join(" ");
+    const numberHints = this._extractNumbersFromText(sourceText);
+    const numberedHintText = numberHints.length
+      ? `- Tránh lặp lại các số liệu sau: ${numberHints.join(", ")}.`
+      : "- Tránh lặp lại y nguyên bộ số của các bài trước.";
+
+    return `\n[RÀNG BUỘC CHỐNG TRÙNG]\n- Bài đang sinh là Bài ${problemNumber}. Phải KHÁC rõ rệt về cấu trúc câu hỏi so với bài đã có.\n${numberedHintText}\n- Không sao chép lại mô-típ đề cũ (đổi tên nhân vật nhưng giữ nguyên số/dạng vẫn tính là trùng).`;
+  }
+  
+  _getLessonSpecificGuidance(lessonName) {
+    const guidance = {
+      "Tỉ số đơn giản": "Trọng tâm: Biểu diễn a : b hay a/b. Lỗi: Nhầm thứ tự, quên rút gọn.",
+      "Chia theo tỉ số": "Công thức: Chia tổng thành các phần theo tỉ số cho trước. Lỗi: Quên tổng số phần, tính sai.",
+      "Tỉ số phần trăm": "Trọng tâm: Hiểu ý nghĩa tỉ số %. Lỗi: Quên ký hiệu %.",
+      "Tìm tỉ số phần trăm của hai số": "Công thức: (a : b) x 100. Yêu cầu BẮT BUỘC: Câu hỏi phải là tìm tỉ số phần trăm của A và B. Lỗi: Lấy b chia a.",
+      "Tìm giá trị phần trăm của một số": "Công thức: a x (p/100). Yêu cầu: Cho biết tổng và %, tìm giá trị cụ thể.",
+      "So sánh tỉ số": "Quy đồng mẫu số hoặc tính giá trị thập phân để so sánh.",
+      "Tỉ lệ thuận": "Hai đại lượng tỉ lệ thuận: y = k × x."
+    };
+    return guidance[lessonName] || "Toán về tỉ số lớp 5.";
+  }
+
+  _getDifficultyGuidance(competencyLevel, topicName) {
+    const level = String(competencyLevel || "Đạt").toLowerCase();
+    if (level.includes("cần cố gắng")) {
+      return `🔴 MỨC DỄ: Chính xác 1 phép tính trực tiếp đúng chuẩn dạng "${topicName}". CẤM yêu cầu nội suy hay tính trung gian. BẮT BUỘC cho SẴN 2 số liệu cuối cùng cần dùng để tính. Lời văn cực kỳ đơn giản, minh bạch.`;
+    } else if (level.includes("đạt")) {
+      return `🟡 MỨC TRUNG BÌNH: Chính xác 2 phép tính. TUYỆT ĐỐI KHÔNG cho sẵn số liệu để tính thẳng ra đáp số. BẮT BUỘC học sinh phải thực hiện 1 phép tính trung gian đơn giản (tìm tổng, tìm hiệu/phần còn lại, hoặc đổi đơn vị) để tìm ra 1 số liệu bị ẩn, SAU ĐÓ mới dùng số liệu ẩn đó thao tác tính cuối giải quyết bài "${topicName}".`;
+    } else if (level.includes("tốt")) {
+      return `🟢 MỨC KHÁ: 3-4 phép tính. TẠO ĐỘ PHÂN HÓA RÕ so với mức Trung bình. BẮT BUỘC phải thực hiện ít nhất 2 bước tính trung gian (ví dụ: cần tính phần thứ 3 từ số tổng và 2 phần kia, hoặc đổi chiều dữ kiện), sau đó bước cuối mới chốt bằng yêu cầu của bài "${topicName}". Bài toán cần có bối cảnh đan xen thông tin để học sinh phân tích kĩ năng tư duy.`;
+    } else {
+      return `🟢 MỨC KHÓ (VẬN DỤNG CAO): 3-5 phép tính. Số liệu bị ẩn giấu kỹ trong một tình huống thực tế phức tạp. Học sinh phải lập luận, tính tổng/hiệu/tích/thương qua nhiều bước để tìm ra các đại lượng ẩn, BƯỚC CUỐI CÙNG mới áp dụng công thức của bài "${topicName}" để trả lời câu hỏi.`;
+    }
+  }
+
+  _getLengthGuidance(competencyLevel) {
+    const level = String(competencyLevel || "Đạt").toLowerCase();
+    if (level.includes("cần cố gắng")) {
+      return "Đề bài tối đa 45 từ, tối đa 2 câu ngắn.";
+    }
+    if (level.includes("đạt")) {
+      return "Đề bài tối đa 60 từ, tối đa 3 câu.";
+    }
+    if (level.includes("tốt")) {
+      return "Đề bài tối đa 90 từ, tối đa 5 câu ngắn. Có thể có 1-2 điều kiện phụ để tạo độ khó vừa phải, nhưng vẫn rõ dữ kiện.";
+    }
+    return "Đề bài tối đa 100 từ, tối đa 5 câu, ưu tiên rõ ràng hơn dài dòng.";
+  }
+
+  _getProblemTypeLimitForBai(baiNumber = 1) {
+    // BÀI 1: Tập trung vào loại bài tính trực tiếp một dạng tỉ số/tỉ số phần trăm
+    if (baiNumber === 1) {
+      return `⭐ LOẠI BÀI 1: BẮT BUỘC tập trung vào loại câu hỏi chính sau (được điều chỉnh bởi độ khó MỨC DỄ/TRUNG BÌNH/KHÁ phía trên):
+  - Tính tỉ số của hai đại lượng.
+  - Hoặc: Tính tỉ số phần trăm của hai đại lượng.
+  - Hoặc: Chia một đại lượng theo tỉ số cho trước.
+  TUYỆT ĐỐI KHÔNG được hỏi so sánh đa nhân vật/phương án hay multiple-choice tỉ số. Để dành cho Loại Bài 2.`;
+    } else {
+      // BÀI 2: Tập trung vào loại bài khác nhau: so sánh hoặc tính giá trị phần trăm từ tỉ số
+      return `⭐ LOẠI BÀI 2: BẮT BUỘC phải KHÁC HOÀN TOÀN với Bài 1. Chọn một trong các loại:
+  - Loại A: Cho tỉ số phần trăm, tính giá trị cụ thể (ngược lại bài 1 chỉ tính tỉ số %).
+  - Loại B: So sánh tỉ số giữa 2-3 nhân vật/đối tượng khác nhau.
+  - Loại C: Bài toán với 2 bước tính tỉ số phụ, rồi mới suy ra kết quả cuối cùng (ví dụ: tìm tỉ số từ tổng và hiệu).
+  - Loại D: Lựa chọn phương án tối ưu hoặc kiểm tra có vượt mức cho phép/khuyến nghị hay không dựa trên tỉ lệ phần trăm.
+  - Nếu đề có từ 2 nhân vật hoặc 2 bộ dữ kiện tách biệt, câu hỏi cuối BẮT BUỘC phải dùng cả hai bộ dữ kiện (ưu tiên so sánh hoặc chọn phương án).
+  - TUYỆT ĐỐI KHÔNG tạo dữ kiện thừa: mọi dữ kiện nêu trong đề phải được dùng để trả lời câu hỏi cuối.
+  TUYỆT ĐỐI KHÔNG phải loại bài giống Bài 1, không được hỏi lại "tính tỉ số % của hai số" như Bài 1.`;
+    }
+  }
+
+  /**
+   * Trả về các tình huống con (sub-scenarios) cho mỗi bối cảnh
+   * Mỗi bối cảnh có thể có nhiều loại tình huống nhỏ để đa dạng không lặp
+   * @private
+   */
+  _getScenarioVariations(contextId = 'sieu_thi') {
+    const scenarios = {
+      'sieu_thi': [
+        { type: 'gia_hang', desc: 'giá các mặt hàng trong siêu thị', unit: 'sản phẩm' },
+        { type: 'so_luong', desc: 'số lượng sản phẩm bán được', unit: 'lần bán' },
+        { type: 'giam_gia', desc: 'khách hàng so sánh giá sau giảm', unit: 'mức giảm' },
+      ],
+      'tieu_vat': [
+        { type: 'chi_toan_bo', desc: 'kế hoạch chi tiêu toàn bộ tiền', unit: 'hạng mục' },
+        { type: 'so_sanh_hai_chi_tieu', desc: 'so sánh hai loại chi tiêu khác nhau', unit: 'mục chi' },
+        { type: 'tiet_kiem_vs_chi', desc: 'so sánh tiền tiết kiệm với tiền chi tiêu', unit: 'phần' },
+      ],
+      'bep_an': [
+        { type: 'dinh_duong', desc: 'so sánh tỉ lệ dinh dưỡng theo calo và khối lượng', unit: 'gam' },
+        { type: 'muc_khuyen_nghi', desc: 'đối chiếu chỉ số dinh dưỡng với mức khuyến nghị', unit: 'kcal' },
+        { type: 'toi_uu_thuc_don', desc: 'lựa chọn phương án thực đơn tối ưu theo gam và kg', unit: 'kg' },
+      ],
+      'nha_truong': [
+        { type: 'ti_so_thanh_tich', desc: 'tỉ lệ thành tích giữa các lớp', unit: 'lớp' },
+        { type: 'so_luong_sach', desc: 'tỉ số sách giữa các thư viện lớp', unit: 'thư viện' },
+        { type: 'so_sang_choi', desc: 'so sánh thiết bị chơi giữa các khu sân', unit: 'khu' },
+        { type: 'dnh_tieu_dung', desc: 'chi tiêu trường học', unit: 'khoản' },
+      ],
+      'kien_truc_su': [
+        { type: 'ti_le_ban_do', desc: 'tỉ lệ bản đồ công trình', unit: 'bộ phận' },
+        { type: 'ti_so_dien_tich', desc: 'so sánh diện tích các phòng', unit: 'phòng' },
+        { type: 'ti_so_khoi_luong', desc: 'tỉ số khối lượng vật liệu xây dựng', unit: 'vật liệu' },
+      ],
+      'cuoc_dua': [
+        { type: 'so_sanh_van_toc', desc: 'so sánh tỉ số vận tốc giữa các thí sinh', unit: 'thí sinh' },
+        { type: 'ti_so_diem', desc: 'tỉ lệ điểm thưởng/trừ giữa các chặng', unit: 'chặng' },
+        { type: 'ti_so_tham_du', desc: 'tỉ số số người tham dự đua', unit: 'đội' },
+      ],
+      'du_lich': [
+        { type: 'ti_so_khoang_cach', desc: 'so sánh khoảng cách giữa các quãng đường', unit: 'quãng' },
+        { type: 'so_sanh_ngay', desc: 'tỉ lệ ngày đi vs ngày ở tại mỗi nơi', unit: 'địa điểm' },
+        { type: 'chi_phi_du_lich', desc: 'so sánh chi phí giữa các hoạt động', unit: 'hoạt động' },
+      ]
+    };
+    return scenarios[contextId] || scenarios['sieu_thi'];
+  }
+
+  /**
+   * Random chọn một tình huống con từ danh sách
+   * @private
+   */
+  _getRandomScenario(contextId = 'sieu_thi', excludeIndex = -1) {
+    const variations = this._getScenarioVariations(contextId);
+    let randomIndex = Math.floor(Math.random() * variations.length);
+    // Nếu muốn loại trừ một scenario cụ thể (để Bài 1 và Bài 2 khác nhau)
+    if (excludeIndex !== -1 && variations.length > 1) {
+      randomIndex = (excludeIndex + 1 + Math.floor(Math.random() * (variations.length - 1))) % variations.length;
+    }
+    return { ...variations[randomIndex], index: randomIndex };
+  }
+
+  async generateSimilarProblem(
+    startupProblem1,
+    startupProblem2,
+    context = "",
+    problemNumber = 1,
+    competencyLevel = "Đạt",
+    startupPercentage = 100,
+    specificWeaknesses = "",
+    examContextId = ""
+  ) {
+    // ✅ FIX: Use 'context' from params as topicName (Vietnamese lesson name)
+    const topicName = context || "Tỉ số đơn giản";
+    const lessonGuidance = this._getLessonSpecificGuidance(topicName);
+    const difficultyGuidance = this._getDifficultyGuidance(competencyLevel, topicName);
+    const lengthGuidance = this._getLengthGuidance(competencyLevel);
+    const problemTypeGuidance = this._getProblemTypeLimitForBai(problemNumber); // BÀI 1/BÀI 2 theo tham số
+    const ctx = EXAM_CONTEXTS.find((c) => c.id === examContextId) || EXAM_CONTEXTS[0];
+    const recentGenerated = this._getRecentGeneratedProblems(ctx.id);
+    
+    // ✅ MỚI: Random scenario con từ bối cảnh
+    const excludeIndex = problemNumber > 1 ? this._lastScenarioIndexByContext.get(ctx.id) ?? -1 : -1;
+    const scenario = this._getRandomScenario(ctx.id, excludeIndex);
+    this._lastScenarioIndexByContext.set(ctx.id, scenario.index);
+    const scenarioInjection = `
+  - Tình huống cụ thể: ${scenario.desc}
+  - Từ vựng sử dụng: "${scenario.unit}"`;
+    
+    const contextInjection = `
+  ═══════════════════════════════════════════════════════════════
+  BOI CANH VA TUYEN NHAN VAT
+  ═══════════════════════════════════════════════════════════════
+  - Bai toan phai dien ra trong boi canh: ${ctx.name} (${ctx.description})
+  ${scenarioInjection}
+  ${CHARACTER_GUIDE}
+  `;
+
+    const antiDuplicateGuidance = this._buildAntiDuplicateGuidance({
+      startupProblem1,
+      startupProblem2,
+      recentGenerated,
+      problemNumber
+    });
+
+    const bepAnConstraint = ctx.id === 'bep_an' ? this._getBepAnConstraint() : '';
+
+    const prompt = `Bạn là chuyên gia ra đề toán tiểu học siêu việt.
+CHỦ ĐỀ & TRỌNG TÂM HIỆN TẠI: ${topicName}
+
+[TIẾN TRÌNH & RÀNG BUỘC KỸ THUẬT]
+Bài 36: Tỉ số, Tỉ số phần trăm -> Bài 37: Tỉ lệ bản đồ -> Bài 38: Tìm hai số khi biết Tổng và Tỉ -> Bài 39: Tìm hai số khi biết Hiệu và Tỉ -> Bài 40: Tìm tỉ số phần trăm của hai số -> Bài 41: Tìm giá trị phần trăm của một số.
+⚠️ QUY TẮC TỐI THƯỢNG: 
+1. TUYỆT ĐỐI KHÔNG dùng khái niệm của các bài học đứng sau bài "${topicName}".
+2. CÂU HỎI CUỐI CÙNG của đề bài BẮT BUỘC phải hỏi ĐÚNG DẠNG của bài "${topicName}". (Ví dụ: Đang ở bài 40 thì phải hỏi "tỉ số phần trăm là bao nhiêu?", cấm hỏi ngược lại giá trị cụ thể của bài 41).
+3. CHỈ dùng dấu PHẨY (,) cho số thập phân, KHÔNG dùng dấu chấm (.). Ví dụ: 2,5, 0,75, 12,4%, 33,33%
+4. CHỈ dùng số thập phân "ĐẸP" - HỮU HẠN không lặp lại. CÁCH: 2,3, 3,45, 0,5, 1,25, 0,75, 12,5. TUYỆT ĐỐI KHÔNG: 0,333... (1/3), 0,6666... (2/3), 0,1666... (1/6)
+5. SỐ TIỀN BẮT BUỘC viết liền, KHÔNG dùng dấu chấm (.) hoặc phẩy (,) ngăn cách hàng nghìn
+   → Ví dụ SAI: 15,000 đồng, 2,500,000 đồng
+   → Ví dụ ĐÚNG: 15000 đồng, 2500000 đồng
+6. ⭐ KHÔNG DỮ KIỆN THỪA: Tất cả dữ kiện xuất hiện trong đề phải phục vụ trực tiếp cho câu hỏi cuối.
+7. ⭐ NẾU CÓ 2 NHÂN VẬT/2 BỘ DỮ KIỆN RIÊNG: câu hỏi cuối phải khai thác cả hai (ưu tiên so sánh/chọn phương án), không được hỏi chỉ một phía.
+
+[ĐÁNH GIÁ NĂNG LỰC & ĐỘ KHÓ]
+${problemTypeGuidance}
+Yêu cầu sinh đề: ${difficultyGuidance}
+Độ dài bắt buộc: ${lengthGuidance}
+Lưu ý chuyên môn: ${lessonGuidance}
+${antiDuplicateGuidance}
+${bepAnConstraint}
+${contextInjection}
+
+[YÊU CẦU ĐẦU RA JSON BẮT BUỘC]
+Trả về DUY NHẤT 1 OBJECT JSON định dạng như sau:
+{
+  "suy_luan": "Bước 1: Phân tích yêu cầu dạng toán ${topicName}. Bước 2: Thiết kế các bước giải tương ứng với độ khó. Bước 3: Chốt câu hỏi cuối cùng đảm bảo đúng dạng ${topicName}.",
+  "de_bai": "Viết trực tiếp đề bài tự luận NGẮN GỌN theo đúng Độ dài bắt buộc. KHÔNG có trắc nghiệm. KHÔNG lời dẫn. PHẢI dùng dấu phẩy (,) cho số thập phân, CHỈ dùng số thập phân đẹp. ⭐ Không có dữ kiện thừa: mọi dữ kiện đều phải dùng cho câu hỏi cuối; nếu có 2 nhân vật thì câu hỏi cuối phải dùng cả hai (ưu tiên so sánh/chọn phương án)."
+}`;
+
+    try {
+      const result = await this._rateLimitedGenerate(prompt);
+      const parsed = extractJSON(result?.response.text() || "");
+      
+      if (parsed && parsed.de_bai) {
+        const cleaned = this._cleanGeneratedProblem(parsed.de_bai);
+        this._rememberGeneratedProblem(ctx.id, cleaned);
+        return cleaned;
+      }
+      return "Một lớp học có 18 học sinh nữ và 12 học sinh nam. Tìm tỉ số phần trăm của số học sinh nữ và tổng số học sinh của lớp đó.";
+    } catch (error) {
+      console.error("Lỗi sinh đề:", error);
+      return "Trong vườn có 25 cây cam và 75 cây bưởi. Tỉ số phần trăm của số cây cam so với tổng số cây trong vườn là bao nhiêu?";
+    }
+  }
+
+  async generateApplicationProblem(studentContext) {
+    const {
+      errorsInKhoiDong = [],
+      weaknessesInLuyenTap = {},
+      topicName = "Tỉ số",
+      competencyLevel = "Đạt",
+      examContextId = '',
+      recentPracticeProblems = []
+    } = studentContext;
+
+    // ✅ FIX: Extract nhanXet (comments) from TC1-TC4 objects in weaknessesInLuyenTap
+    const practiceComments = Object.values(weaknessesInLuyenTap)
+      .map(tc => tc?.nhanXet)
+      .filter(comment => comment && typeof comment === 'string' && comment.trim());
+    
+    const errorLog = [...errorsInKhoiDong, ...practiceComments].join("; ");
+    const difficultyGuidance = this._getDifficultyGuidance(competencyLevel, topicName);
+    const lengthGuidance = this._getLengthGuidance(competencyLevel);
+    const problemTypeGuidance = this._getProblemTypeLimitForBai(2); // BÀI 2
+    const ctx = EXAM_CONTEXTS.find((c) => c.id === examContextId) || EXAM_CONTEXTS[0];
+    const antiDuplicateGuidance = this._buildAntiDuplicateGuidance({
+      startupProblem1: Array.isArray(recentPracticeProblems) ? recentPracticeProblems[0] : '',
+      startupProblem2: Array.isArray(recentPracticeProblems) ? recentPracticeProblems[1] : '',
+      recentGenerated: this._getRecentGeneratedProblems(ctx.id),
+      problemNumber: 3
+    });
+    const bepAnConstraint = ctx.id === 'bep_an' ? this._getBepAnConstraint() : '';
+    
+    // ✅ MỚI: Random scenario con từ bối cảnh (KHÁC với Bài 1)
+    const scenario = this._getRandomScenario(ctx.id, -1);
+    const scenarioInjection = `
+  - Tình huống cụ thể: ${scenario.desc}
+  - Từ vựng sử dụng: "${scenario.unit}"`;
+    
+    const contextInjection = `
+  ═══════════════════════════════════════════════════════════════
+  BOI CANH VA TUYEN NHAN VAT
+  ═══════════════════════════════════════════════════════════════
+  - Bai toan phai dien ra trong boi canh: ${ctx.name} (${ctx.description})
+  ${scenarioInjection}
+  ${CHARACTER_GUIDE}
+  `;
+
+    const prompt = `TẠO ĐỀ TOÁN VẬN DỤNG THỰC TẾ. 
+CHỦ ĐỀ & TRỌNG TÂM HIỆN TẠI: ${topicName}
+
+[TIẾN TRÌNH & RÀNG BUỘC KỸ THUẬT]
+Bài 36: Tỉ số, Tỉ số phần trăm -> Bài 37: Tỉ lệ bản đồ -> Bài 38: Tìm hai số khi biết Tổng và Tỉ -> Bài 39: Tìm hai số khi biết Hiệu và Tỉ -> Bài 40: Tìm tỉ số phần trăm của hai số -> Bài 41: Tìm giá trị phần trăm của một số.
+⚠️ QUY TẮC TỐI THƯỢNG: 
+1. Cấm dùng kiến thức vượt cấp.
+2. CÂU HỎI CUỐI CÙNG của đề bài BẮT BUỘC phải là dạng toán "${topicName}". Không được nhầm lẫn sang bài khác.
+3. CHỈ dùng dấu PHẨY (,) cho số thập phân, KHÔNG dùng dấu chấm (.). Ví dụ: 2,5, 0,75, 12,4%, 33,33%
+4. CHỈ dùng số thập phân "ĐẸP" - HỮU HẠN không lặp lại. CÁCH: 2,3, 3,45, 0,5, 1,25, 0,75, 12,5. TUYỆT ĐỐI KHÔNG: 0,333... (1/3), 0,6666... (2/3), 0,1666... (1/6)
+5. SỐ TIỀN BẮT BUỘC viết liền, KHÔNG dùng dấu chấm (.) hoặc phẩy (,) ngăn cách hàng nghìn
+   → Ví dụ SAI: 15,000 đồng, 2,500,000 đồng
+   → Ví dụ ĐÚNG: 15000 đồng, 2500000 đồng
+6. ⭐ KHÔNG DỮ KIỆN THỪA: Tất cả dữ kiện xuất hiện trong đề phải phục vụ trực tiếp cho câu hỏi cuối.
+7. ⭐ NẾU CÓ 2 NHÂN VẬT/2 BỘ DỮ KIỆN RIÊNG: câu hỏi cuối phải khai thác cả hai (ưu tiên so sánh/chọn phương án), không được hỏi chỉ một phía.
+
+[ĐÁNH GIÁ NĂNG LỰC & ĐỘ KHÓ]
+${problemTypeGuidance}
+Yêu cầu sinh đề: ${difficultyGuidance}
+Độ dài bắt buộc: ${lengthGuidance}
+Lỗi HS hay mắc: ${errorLog || "Không có lỗi cụ thể"}.
+${antiDuplicateGuidance}
+${bepAnConstraint}
+${contextInjection}
+
+[YÊU CẦU ĐẦU RA JSON BẮT BUỘC]
+Trả về DUY NHẤT 1 OBJECT JSON định dạng như sau:
+{
+  "suy_luan": "Phân tích số liệu bị ẩn cho mức ${competencyLevel}. Loại bài PHẢI khác hoàn toàn với Bài 1 luyện tập. Đảm bảo câu hỏi cuối cùng hỏi đúng kiến thức ${topicName}.",
+  "de_bai": "Chỉ sinh 1 bài toán ngắn gọn theo đúng Độ dài bắt buộc. Cấm trắc nghiệm. Không tiêu đề. PHẢI dùng dấu phẩy (,) cho số thập phân, CHỈ dùng số thập phân đẹp. ⭐ Không có dữ kiện thừa: mọi dữ kiện đều phải dùng cho câu hỏi cuối; nếu có 2 nhân vật thì câu hỏi cuối phải dùng cả hai (ưu tiên so sánh/chọn phương án)."
+}`;
+
+    try {
+      const result = await this._rateLimitedGenerate(prompt);
+      const parsed = extractJSON(result?.response.text() || "");
+      
+      if (parsed && parsed.de_bai) {
+        const cleaned = this._cleanGeneratedProblem(parsed.de_bai);
+        this._rememberGeneratedProblem(ctx.id, cleaned);
+        return cleaned;
+      }
+      return "Một cửa hàng nhập về 400kg gạo. Buổi sáng bán được 120kg, buổi chiều bán được 160kg. Hỏi số gạo đã bán chiếm bao nhiêu phần trăm tổng số gạo nhập về?";
+    } catch (error) {
+      console.error("Lỗi sinh đề vận dụng:", error);
+      return "Một thư viện có 500 quyển sách. Sau khi cho mượn, thư viện còn lại 350 quyển. Hỏi số sách đã cho mượn chiếm bao nhiêu phần trăm tổng số sách?";
+    }
+  }
+
+  _cleanGeneratedProblem(problem) {
+    if (!problem) return "";
+
+    const normalizeMoney = (text = "") =>
+      String(text).replace(/\b(\d{1,3}(?:[.,]\d{3})+)\s*(đồng|vnd|vnđ)\b/gi, (_, amount, unit) => {
+        const compact = String(amount).replace(/[.,]/g, "");
+        return `${compact} ${unit}`;
+      });
+
+    return normalizeMoney(
+      problem
+      .replace(/^(Dưới đây là|Bài toán|Đề bài|Bài vận dụng|Bạn hãy giải quyết|Câu hỏi|Lời dẫn):/gi, "")
+      .replace(/^(Chào bạn|Đây là bài toán).*?\n/gi, "")
+      .replace(/```[a-z]*\n?|```/g, "")
+      .replace(/\.(?=\d)/g, ",")
+      .trim(),
+    );
+  }
+}
+
+const geminiPracticeServiceTiSo = new GeminiPracticeServiceTiSo();
+export default geminiPracticeServiceTiSo;

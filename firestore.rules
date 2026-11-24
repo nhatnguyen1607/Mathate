@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Browsers access protected records through the verified Node API.
+    // XP, role and completion can only be written by Firebase Admin SDK.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

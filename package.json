@@ -1,0 +1,38 @@
+{
+  "name": "mathate",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:client": "vite --host 127.0.0.1",
+    "dev:server": "node --watch --env-file=.env server/index.js",
+    "build": "vite build",
+    "start": "node --env-file=.env server/index.js",
+    "test": "node --test tests/*.test.js",
+    "admin": "node --env-file=.env scripts/set-admin.mjs",
+    "verify:prompts": "node scripts/verify-prompts.mjs",
+    "prompts:export": "node scripts/export-prompts.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/nunito": "^5.3.0",
+    "@splinetool/react-spline": "^4.1.0",
+    "canvas-confetti": "^1.9.4",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "firebase": "^12.8.0",
+    "firebase-admin": "^13.6.0",
+    "google-auth-library": "^10.6.1",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "prettier": "^3.10.1",
+    "vite": "^6.4.0"
+  }
+}

@@ -1,0 +1,357 @@
+/* Content remains readable on children's tablets and smaller phones. */
+.level-emblem > span {
+  color: #536c39;
+  font-size: 12px;
+}
+.fact-panel h2 {
+  color: #75602f;
+}
+.collection-header,
+.collection-header > span,
+.badge-card > strong {
+  color: #5c7149;
+}
+.badge-card > strong {
+  font-size: 12px;
+}
+.milestones li > div:nth-child(2) > span,
+.milestones p,
+.journey-summary p,
+.journey-summary-stat span {
+  color: #5e714d;
+}
+.breadcrumb,
+.breadcrumb strong,
+.streak-chip {
+  color: #657353;
+}
+.sidebar-bottom p,
+.sidebar-invitation p {
+  color: #657753;
+}
+.greeting p,
+.section-heading p,
+.topic-card > p,
+.welcome-copy > p,
+.preview-notice,
+.gentle-note p,
+.level-panel > p,
+.daily-panel > p,
+.fact-panel p,
+.milestones p,
+.history-row p,
+.badge-card p {
+  color: #5e7056;
+}
+.topic-card > p {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.topic-card h3 {
+  font-size: 17px;
+}
+.topic-card {
+  min-height: 239px;
+}
+.topic-card-bottom {
+  font-size: 12px;
+  color: #637258;
+}
+.category-tabs button {
+  font-size: 13px;
+  min-height: 40px;
+  color: #617256;
+}
+.category-tabs button.selected {
+  color: #3c693f;
+}
+.search-box input {
+  font-size: 13px;
+}
+.search-box input::placeholder {
+  color: #66735f;
+}
+.section-heading p,
+.greeting p {
+  font-size: 14px;
+}
+.preview-notice {
+  font-size: 13px;
+}
+.preview-notice.demo {
+  color: #735a21;
+}
+.recommended,
+.completed-count {
+  font-size: 11px;
+  color: #59753e;
+}
+.gentle-note p {
+  font-size: 13px;
+}
+.gentle-note strong {
+  color: #4f6941;
+}
+.banner-note {
+  font-size: 12px;
+  color: #5e7050;
+}
+.level-panel > p,
+.daily-panel > p,
+.fact-panel p {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.level-panel > small,
+.xp-label,
+.level-stats span,
+.panel-link,
+.daily-bottom strong,
+.daily-bottom > span,
+.fact-panel button {
+  font-size: 12px;
+  color: #61724f;
+}
+.fact-panel p,
+.fact-panel button {
+  color: #75602f;
+}
+.daily-bottom {
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.topic-count {
+  color: #5c6b51;
+}
+.message-bubble p {
+  font-size: 16px;
+}
+.message-author {
+  font-size: 12px;
+  color: #627452;
+}
+.message-speak {
+  min-width: 33px;
+  min-height: 30px;
+  color: #65834f;
+  align-items: center;
+}
+.hint-button {
+  font-size: 13px;
+  min-height: 38px;
+  color: #836622;
+}
+.learning-steps li {
+  font-size: 13px;
+  color: #6c7c5f;
+}
+.learning-steps > p {
+  font-size: 12px;
+  color: #687b54;
+}
+.chat-compose > small {
+  font-size: 12px;
+  color: #6c7b60;
+}
+.companion-panel > .text-button {
+  font-size: 12px;
+  color: #5e754b;
+  min-height: 35px;
+}
+.chat-heading p {
+  font-size: 12px;
+  color: #647554;
+}
+.chat-status {
+  color: #647c50;
+}
+.message.user .message-bubble {
+  color: #30472a;
+}
+.login-form-wrap label,
+.admin-editor label {
+  font-size: 14px;
+}
+.parent-note {
+  font-size: 12px;
+  color: #6a785c;
+}
+.login-form-wrap > p:first-of-type {
+  color: #647656;
+}
+.auth-switch,
+.demo-login {
+  color: #687956;
+}
+.form-divider {
+  color: #6b7b5e;
+}
+.empty-state p,
+.page-heading p,
+.badge-card p,
+.history-row p,
+.milestones p {
+  color: #647556;
+}
+.page-footer {
+  font-size: 11px;
+  color: #6a795e;
+}
+.page-footer span:last-child {
+  color: #697e56;
+}
+.completion-banner p {
+  font-size: 13px;
+  color: #5e754d;
+}
+.date-note {
+  color: #687a5a;
+}
+.topic-toolbar .search-box {
+  min-height: 40px;
+}
+.account-chip small {
+  font-size: 12px;
+  color: #647656;
+}
+@media (max-width: 1020px) {
+  .fact-panel {
+    margin-top: 0;
+  }
+  .progress-column {
+    align-items: stretch;
+  }
+  .level-panel {
+    grid-row: span 2;
+  }
+  .topic-card > p {
+    font-size: 13px;
+  }
+  .topic-card h3 {
+    font-size: 16px;
+  }
+  .category-tabs button {
+    font-size: 12px;
+  }
+  .progress-column .daily-panel,
+  .progress-column .fact-panel {
+    height: auto;
+  }
+}
+@media (max-width: 760px) {
+  .topic-card > p {
+    font-size: 14px;
+  }
+  .topic-card h3 {
+    font-size: 17px;
+  }
+  .learning-steps li {
+    font-size: 12px;
+  }
+  .progress-column {
+    display: flex;
+  }
+  .level-panel {
+    display: block;
+  }
+  .daily-panel,
+  .fact-panel {
+    width: 100%;
+  }
+  .banner-note {
+    font-size: 11px;
+  }
+  .page-footer {
+    font-size: 10px;
+  }
+}
+@media (max-width: 430px) {
+  .topic-card {
+    padding: 17px 13px;
+    min-height: 260px;
+  }
+  .topic-card h3 {
+    font-size: 16px;
+  }
+  .topic-card > p {
+    font-size: 13px;
+  }
+  .topic-card-bottom {
+    font-size: 11px;
+  }
+  .recommended,
+  .completed-count {
+    font-size: 10px;
+  }
+  .category-tabs {
+    gap: 3px;
+  }
+  .category-tabs button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .section-heading h2 {
+    font-size: 21px;
+  }
+  .section-heading p,
+  .greeting p {
+    font-size: 13px;
+  }
+  .welcome-copy > p {
+    font-size: 13px;
+    max-width: 175px;
+  }
+  .banner-note {
+    font-size: 10px;
+    max-width: 185px;
+  }
+  .preview-notice {
+    font-size: 12px;
+    align-items: flex-start;
+  }
+  .preview-notice a {
+    font-size: 12px;
+  }
+  .gentle-note p {
+    font-size: 12px;
+  }
+  .learning-steps h2 {
+    font-size: 13px;
+  }
+  .learning-steps ol {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .learning-steps li {
+    font-size: 12px;
+  }
+  .learning-steps > p {
+    font-size: 11px;
+    margin-top: 16px;
+  }
+  .companion-render {
+    height: 190px;
+  }
+  .companion-render .mascot {
+    height: 180px;
+  }
+  .companion-panel > strong {
+    font-size: 12px;
+  }
+  .companion-panel > .text-button {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  .practice-aside {
+    grid-template-columns: 115px 1fr;
+  }
+  .chat-compose textarea {
+    font-size: 15px;
+  }
+  .chat-compose > small {
+    font-size: 11px;
+  }
+  .message-bubble p {
+    font-size: 16px;
+  }
+}
