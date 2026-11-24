@@ -2,14 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pause, Play, Sparkles, Star } from "lucide-react";
 import "../hero-mimo.css";
 
-export const mimoPoses = [
-  { id: "welcome", src: "/mimo.png" },
-  { id: "thinking", src: "/mascots/mimo-thinking.png" },
-  { id: "reading", src: "/mascots/mimo-reading.png" },
-  { id: "happy", src: "/mascots/mimo-happy.png" },
-];
+import { useCompanion } from "../context/AppearanceContext";
+import { poseNames } from "../../shared/personalization.js";
 const ROTATION_MS = 8000;
 export default function HeroMimo() {
+  const { character } = useCompanion();
+  return <CompanionGallery key={character.id} />;
+}
+function CompanionGallery() {
+  const { asset, copy } = useCompanion();
+  const mimoPoses = poseNames.map((id) => ({ id, src: asset(id) }));
   const scene = useRef(null);
   const [current, setCurrent] = useState(0),
     [available, setAvailable] = useState([0]),
@@ -99,11 +101,15 @@ export default function HeroMimo() {
           type="button"
           className="mimo-motion-toggle"
           aria-label={
-            paused ? "Tiếp tục chuyển động Mimo" : "Tạm dừng chuyển động Mimo"
+            paused
+              ? copy("Tiếp tục chuyển động Mimo")
+              : copy("Tạm dừng chuyển động Mimo")
           }
           aria-pressed={paused}
           title={
-            paused ? "Tiếp tục chuyển động Mimo" : "Tạm dừng chuyển động Mimo"
+            paused
+              ? copy("Tiếp tục chuyển động Mimo")
+              : copy("Tạm dừng chuyển động Mimo")
           }
           onClick={() => setPaused((value) => !value)}
         >

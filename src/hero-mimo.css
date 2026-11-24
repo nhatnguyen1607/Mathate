@@ -30,7 +30,7 @@
   width: 145px;
   height: 15px;
   border-radius: 50%;
-  background: #587d3e26;
+  background: var(--brand-shadow, #587d3e26);
   filter: blur(5px);
   animation: mimo-shadow-breathe 4.8s ease-in-out infinite;
 }
@@ -44,11 +44,11 @@
   min-width: 36px;
   min-height: 36px;
   border-radius: 50%;
-  color: #3b623b;
-  background: #e8f0dfc9;
+  color: var(--brand-muted, #3b623b);
+  background: var(--brand-shadow, #e8f0dfc9);
 }
 .mimo-motion-toggle:hover {
-  background: #d7e6c5;
+  background: var(--brand-ground, #d7e6c5);
 }
 .mimo-gallery.is-paused .mimo-float,
 .mimo-gallery.is-paused .mimo-hover-shadow {

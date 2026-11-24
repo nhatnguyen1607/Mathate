@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Heart, Lightbulb, Sparkles, Volume2, Hand } from "lucide-react";
 import { Mascot } from "./ui";
+import { useCompanion } from "../context/AppearanceContext";
 const moods = {
   idle: { label: "Mimo sẵn sàng học cùng bạn", Icon: Sparkles },
   thinking: { label: "Mimo đang suy nghĩ cùng bạn", Icon: Lightbulb },
@@ -12,6 +13,7 @@ export default function RobotCompanion({
   status = "idle",
   isSpeaking = false,
 }) {
+  const { copy } = useCompanion();
   const [greeting, setGreeting] = useState(0);
   const mood = isSpeaking
     ? "speaking"
@@ -29,10 +31,21 @@ export default function RobotCompanion({
       <div
         className={`companion-render mimo-stage ${mood} ${greeting ? "greeting" : ""}`}
         role="img"
-        aria-label={greeting ? "Mimo chào bạn nhỏ" : label}
+        aria-label={copy(greeting ? "Mimo chào bạn nhỏ" : label)}
       >
         <div className="mimo-stage-ground" />
-        <Mascot key={greeting} className="mimo-character" alt="" />
+        <Mascot
+          key={greeting}
+          pose={
+            mood === "thinking"
+              ? "thinking"
+              : mood === "correct"
+                ? "happy"
+                : "welcome"
+          }
+          className="mimo-character"
+          alt=""
+        />
         <span className="mimo-mood-icon" aria-hidden="true">
           <Icon size={20} />
         </span>
@@ -52,7 +65,7 @@ export default function RobotCompanion({
         disabled={isSpeaking || mood === "thinking"}
       >
         <Hand size={16} />
-        {greeting ? "Mimo chào bạn!" : "Chào Mimo"}
+        {copy(greeting ? "Mimo chào bạn!" : "Chào Mimo")}
       </button>
     </div>
   );

@@ -134,6 +134,16 @@ export const store = {
     const d = await db.doc(`users/${uid}`).get();
     return { ...emptyProfile(), ...d.data() };
   },
+  async updateProfile(uid, demo, changes) {
+    checkStore(demo);
+    if (demo)
+      profiles.set(uid, {
+        ...(profiles.get(uid) || emptyProfile()),
+        ...changes,
+      });
+    else await db.doc(`users/${uid}`).set(changes, { merge: true });
+    return this.profile(uid, demo);
+  },
   async history(uid, demo) {
     checkStore(demo);
     const list = demo
@@ -175,12 +185,10 @@ export const store = {
     checkStore(demo);
     if (demo) sessions.set(session.id, structuredClone(session));
     else
-      await db
-        .doc(`sessions/${session.id}`)
-        .set({
-          ...session,
-          expiresAt: Timestamp.fromMillis(Date.now() + 180 * 86400000),
-        });
+      await db.doc(`sessions/${session.id}`).set({
+        ...session,
+        expiresAt: Timestamp.fromMillis(Date.now() + 180 * 86400000),
+      });
   },
   async complete(session, demo) {
     checkStore(demo);

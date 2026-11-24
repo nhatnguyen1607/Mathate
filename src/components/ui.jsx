@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Sprout,
 } from "lucide-react";
+import { useCompanion } from "../context/AppearanceContext";
 const icons = {
   calculator: Calculator,
   shapes: Shapes,
@@ -23,19 +24,21 @@ export function TopicIcon({ name, size = 28, ...props }) {
   return <Icon size={size} strokeWidth={1.8} {...props} />;
 }
 export function Spinner({ text = "Mimo đang chuẩn bị…" }) {
+  const { copy } = useCompanion();
   return (
     <div className="loading-state" role="status">
       <LoaderCircle className="spin" size={28} />
-      <span>{text}</span>
+      <span>{copy(text)}</span>
     </div>
   );
 }
 export function ErrorBox({ message, retry }) {
+  const { copy } = useCompanion();
   if (!message) return null;
   return (
     <div className="error-box" role="alert">
       <AlertCircle size={20} />
-      <span>{message}</span>
+      <span>{copy(message)}</span>
       {retry && <button onClick={retry}>Thử lại</button>}
     </div>
   );
@@ -52,11 +55,12 @@ export function Empty({ title, children, action }) {
     </div>
   );
 }
-export function Mascot({ className = "", ...props }) {
+export function Mascot({ className = "", pose = "welcome", ...props }) {
+  const { asset, character } = useCompanion();
   return (
     <img
-      src="/mimo.png"
-      alt="Mimo, khủng long xanh nhỏ đang vẫy tay"
+      src={asset(pose)}
+      alt={`${character.name}, bạn đồng hành của bạn`}
       className={`mascot ${className}`}
       {...props}
     />

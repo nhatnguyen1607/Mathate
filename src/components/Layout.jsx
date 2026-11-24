@@ -7,6 +7,7 @@ import {
   History,
   LogOut,
   Settings2,
+  UserRound,
   Menu,
   X,
   Sparkles,
@@ -29,13 +30,16 @@ export function Logo() {
     </Link>
   );
 }
+import { useCompanion } from "../context/AppearanceContext";
 const links = [
   { path: "/", icon: Compass, label: "Khám phá" },
   { path: "/journey", icon: Map, label: "Hành trình của mình" },
   { path: "/collection", icon: Award, label: "Bộ sưu tập" },
   { path: "/history", icon: History, label: "Góc ôn tập" },
+  { path: "/account", icon: UserRound, label: "Tài khoản của mình" },
 ];
 export default function Layout() {
+  const { copy } = useCompanion();
   const { user, demo, profile, logout } = useApp();
   const [menu, setMenu] = useState(false);
   const location = useLocation();
@@ -58,7 +62,9 @@ export default function Layout() {
       "Quản trị Mathate";
   const level = getLevel(profile.xp),
     name =
-      user?.displayName?.split(" ").at(-1) || (demo ? "Bạn nhỏ" : "Bạn nhỏ");
+      profile.nickname ||
+      (profile.displayName || user?.displayName)?.split(" ").at(-1) ||
+      (demo ? "Bạn nhỏ" : "Bạn nhỏ");
   return (
     <div className="app-shell">
       <aside
@@ -104,7 +110,7 @@ export default function Layout() {
             <br />
             giỏi hơn thật nhiều!
           </strong>
-          <p>Mimo luôn ở đây cùng bạn.</p>
+          <p>{copy("Mimo luôn ở đây cùng bạn.")}</p>
           <Link to="/journey" onClick={() => setMenu(false)}>
             Xem hành trình <ChevronRight size={16} />
           </Link>
@@ -153,7 +159,7 @@ export default function Layout() {
             </button>
             <span>Không gian học tập</span>
             <ChevronRight size={16} />
-            <strong>{current}</strong>
+            <strong>{copy(current)}</strong>
           </div>
           <div className="topbar-right">
             <span className="streak-chip" title="Số ngày học liên tiếp">
@@ -168,11 +174,19 @@ export default function Layout() {
             ) : (
               <Link
                 className="account-chip"
-                aria-label="Hành trình của mình"
-                to="/journey"
+                aria-label="Tài khoản của mình"
+                to="/account"
               >
                 <span className="avatar">
-                  <Sprout size={23} />
+                  {profile.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt=""
+                      className="user-avatar-image"
+                    />
+                  ) : (
+                    <Sprout size={23} />
+                  )}
                 </span>
                 <span>
                   <strong>{name}</strong>

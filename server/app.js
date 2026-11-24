@@ -9,6 +9,8 @@ import { createAIProblem, processAITurn } from "./services/ai.js";
 import { demoProblem, demoReply } from "./services/demo.js";
 import { synthesizeSpeech, ttsConfigured } from "./services/tts.js";
 import { listAccounts, updateAccount } from "./services/accounts.js";
+import { companions, themes } from "../shared/personalization.js";
+import { avatarUploadSignature, verifyAvatar } from "./services/cloudinary.js";
 export const app = express();
 if (process.env.VERCEL === "1") app.set("trust proxy", 1);
 app.disable("x-powered-by");
@@ -113,6 +115,45 @@ app.get("/api/topics", async (req, res) =>
 app.get("/api/profile", async (req, res) =>
   res.json(await store.profile(req.user.uid, req.user.demo)),
 );
+app.patch("/api/profile", async (req, res) => {
+  const changes = z
+    .object({
+      displayName: z.string().trim().min(1).max(60).optional(),
+      nickname: z.string().trim().max(30).optional(),
+      companion: z.enum(companions.map((c) => c.id)).optional(),
+      theme: z.enum(themes.map((t) => t.id)).optional(),
+    })
+    .strict()
+    .refine((value) => Object.keys(value).length > 0)
+    .parse(req.body);
+  if (changes.displayName && !req.user.demo)
+    await auth.updateUser(req.user.uid, { displayName: changes.displayName });
+  res.json(await store.updateProfile(req.user.uid, req.user.demo, changes));
+});
+app.post("/api/profile/avatar/signature", async (req, res) => {
+  if (req.user.demo)
+    return res
+      .status(403)
+      .json({ error: "Bạn đăng nhập để tải ảnh đại diện nhé." });
+  res.set("Cache-Control", "no-store");
+  res.json(avatarUploadSignature(req.user.uid));
+});
+app.post("/api/profile/avatar", async (req, res) => {
+  if (req.user.demo)
+    return res
+      .status(403)
+      .json({ error: "Bạn đăng nhập để lưu ảnh đại diện nhé." });
+  const upload = z
+    .object({
+      public_id: z.string().max(160),
+      version: z.number().int().positive(),
+      signature: z.string().length(40),
+    })
+    .strict()
+    .parse(req.body);
+  const avatarUrl = verifyAvatar(req.user.uid, upload);
+  res.json(await store.updateProfile(req.user.uid, false, { avatarUrl }));
+});
 app.get("/api/history", async (req, res) =>
   res.json(await store.history(req.user.uid, req.user.demo)),
 );

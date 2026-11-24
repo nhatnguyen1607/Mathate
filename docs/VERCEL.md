@@ -28,6 +28,7 @@ Backend:
 | FIREBASE_SERVICE_ACCOUNT | Toàn bộ nội dung JSON service account Mathate |
 | TTS_SERVICE_ACCOUNT | Toàn bộ nội dung JSON service account TTS Math-AI đã được cho phép dùng lại |
 | DEMO_MODE | false |
+| CLOUDINARY_URL | URL Cloudinary riêng của backend; có sẵn trong file .env.vercel mới |
 
 Hai biến JSON: mở đúng file JSON local, copy từ dấu `{` đầu đến dấu `}` cuối và dán làm Value; không bọc thêm dấu nháy, không dán đường dẫn file, giữ nguyên các chuỗi `\n` trong private_key. Không đặt tiền tố VITE_ cho các biến backend. Không thêm GOOGLE_APPLICATION_CREDENTIALS hoặc TTS_APPLICATION_CREDENTIALS trỏ tới ổ C:/D:; các file đó không tồn tại trên Vercel. Không cần PORT/HOST. Giữ authDomain Firebase hiện tại, không thay bằng domain Vercel.
 

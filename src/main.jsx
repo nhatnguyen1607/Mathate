@@ -5,6 +5,7 @@ import { AppProvider } from "./context/AppContext";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Account from "./pages/Account";
 import Practice from "./pages/Practice";
 import Admin from "./pages/Admin";
 import { Journey, Collection, HistoryPage } from "./pages/Progress";
@@ -12,6 +13,7 @@ import "@fontsource-variable/nunito";
 import "./styles.css";
 import "./readability.css";
 import "./companion.css";
+import "./personalization.css";
 class ErrorBoundary extends React.Component {
   state = { failed: false };
   static getDerivedStateFromError() {
@@ -51,6 +53,7 @@ root.render(
               <Route path="collection" element={<Collection />} />
               <Route path="history" element={<HistoryPage />} />
               <Route path="admin" element={<Admin />} />
+              <Route path="account" element={<Account />} />
               <Route
                 path="*"
                 element={

@@ -3,7 +3,7 @@
   width: 2px;
   height: 1em;
   margin-left: 3px;
-  background: #66824e;
+  background: var(--brand-primary, #66824e);
   vertical-align: text-bottom;
   animation: blink 1s infinite;
 }
@@ -14,7 +14,7 @@
   margin-top: 7px;
   font-size: 12px;
   font-weight: 800;
-  color: #526f3b;
+  color: var(--brand-primary, #526f3b);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -28,13 +28,13 @@
   border-radius: 7px;
   font-size: 12px;
   font-weight: 800;
-  color: #4b6c37;
+  color: var(--brand-primary, #4b6c37);
 }
 .auto-read-toggle:hover {
-  background: #e3edda;
+  background: var(--brand-panel, #e3edda);
 }
 .auto-read-toggle[aria-pressed="false"] {
-  color: #68745c;
+  color: var(--brand-muted, #68745c);
 }
 .mimo-companion {
   position: relative;
@@ -58,7 +58,7 @@
   left: 17%;
   width: 66%;
   height: 24px;
-  background: #dce9c9;
+  background: var(--brand-ground, #dce9c9);
   border-radius: 50%;
   z-index: 0;
 }
@@ -70,8 +70,8 @@
   height: 34px;
   display: grid;
   place-items: center;
-  color: #637f36;
-  background: #f7faed;
+  color: var(--brand-primary, #637f36);
+  background: var(--brand-soft, #f7faed);
   border-radius: 50%;
   z-index: 2;
 }
@@ -99,7 +99,7 @@
   font-size: 12px !important;
   min-height: 36px;
   margin: 2px auto 4px;
-  color: #537439;
+  color: var(--brand-primary, #537439);
 }
 .mimo-speaking-waves {
   position: absolute;
@@ -111,9 +111,9 @@
   gap: 3px;
   min-width: 34px;
   height: 34px;
-  background: #f7faed;
+  background: var(--brand-soft, #f7faed);
   border-radius: 50%;
-  color: #69874d;
+  color: var(--brand-muted, #69874d);
   z-index: 2;
 }
 .mimo-speaking-waves i {
@@ -138,7 +138,7 @@
 }
 .voice-picker {
   border: 0;
-  border-top: 1px solid #d8e4cb;
+  border-top: 1px solid var(--brand-border, #d8e4cb);
   margin: 19px 8px 0;
   padding: 17px 0 0;
   min-width: 0;
@@ -153,7 +153,7 @@
   padding: 0;
   font-size: 13px;
   font-weight: 800;
-  color: #526e3c;
+  color: var(--brand-muted, #526e3c);
   margin-bottom: 11px;
 }
 .voice-picker > div {
@@ -168,24 +168,24 @@
   gap: 5px;
   min-height: 39px;
   flex: 1;
-  border: 1px solid #d4dfc7;
-  background: #f9fbf5;
-  color: #647754;
+  border: 1px solid var(--brand-border, #d4dfc7);
+  background: var(--brand-soft, #f9fbf5);
+  color: var(--brand-muted, #647754);
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 800;
 }
 .voice-picker label.selected {
-  background: #dcebcf;
-  border-color: #9cb781;
-  color: #3d6231;
+  background: var(--brand-ground, #dcebcf);
+  border-color: var(--brand-border, #9cb781);
+  color: var(--brand-ink, #3d6231);
 }
 .voice-picker input {
   width: 13px;
   height: 13px;
   margin: 0;
-  accent-color: #487a38;
+  accent-color: var(--brand-primary, #487a38);
 }
 .voice-picker label:has(input:focus-visible) {
   outline: 3px solid #d6ab46;
@@ -198,7 +198,7 @@
 .voice-picker p {
   font-size: 11px;
   line-height: 1.6;
-  color: #60764f;
+  color: var(--brand-muted, #60764f);
   margin: 10px 0 0;
   min-height: 35px;
 }

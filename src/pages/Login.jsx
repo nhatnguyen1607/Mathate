@@ -1,3 +1,4 @@
+import { useCompanion } from "../context/AppearanceContext";
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -36,6 +37,7 @@ const messages = {
     "Firebase Authentication chưa được bật cho dự án Mathate.",
 };
 export default function Login() {
+  const { copy } = useCompanion();
   const [register, setRegister] = useState(false),
     [show, setShow] = useState(false),
     [email, setEmail] = useState(""),
@@ -73,7 +75,9 @@ export default function Login() {
     run(async () => {
       if (register) {
         const r = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(r.user, { displayName: name.trim() || "Bạn nhỏ" });
+        await updateProfile(r.user, {
+          displayName: name.trim() || "Bạn nhỏ",
+        });
       } else await signInWithEmailAndPassword(auth, email, password);
     });
   }
@@ -108,7 +112,7 @@ export default function Login() {
             <span>chút tò mò.</span>
           </h1>
           <p>
-            Cùng Mimo khám phá toán học
+            {copy("\n            Cùng Mimo khám phá toán học\n            ")}
             <br />
             theo cách thật vui, thật là bạn.
           </p>
@@ -130,7 +134,9 @@ export default function Login() {
           <span className="login-welcome-icon">
             <Sparkles size={25} />
           </span>
-          <h2>{register ? "Bắt đầu hành trình nhỏ" : "Mimo chờ bạn mãi!"}</h2>
+          <h2>
+            {register ? "Bắt đầu hành trình nhỏ" : copy("Mimo chờ bạn mãi!")}
+          </h2>
           <p>
             {register
               ? "Nhờ bố mẹ cùng tạo tài khoản để lưu tiến bộ nhé."
@@ -171,7 +177,9 @@ export default function Login() {
           <form onSubmit={submit}>
             {register && (
               <label>
-                Bạn muốn Mimo gọi là gì?
+                {copy(
+                  "\n                Bạn muốn Mimo gọi là gì?\n                ",
+                )}
                 <input
                   autoComplete="nickname"
                   value={name}
@@ -238,7 +246,7 @@ export default function Login() {
               {busy
                 ? "Đang kết nối…"
                 : register
-                  ? "Tạo tài khoản cùng Mimo"
+                  ? copy("Tạo tài khoản cùng Mimo")
                   : "Vào thế giới Mathate"}
             </button>
           </form>

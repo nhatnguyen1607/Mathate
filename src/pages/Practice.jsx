@@ -1,3 +1,4 @@
+import { useCompanion } from "../context/AppearanceContext";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -18,11 +19,12 @@ import { api } from "../lib/api";
 import { speak, stopSpeech } from "../lib/speech";
 import { useApp } from "../context/AppContext";
 import { steps, difficulties } from "../../shared/catalog";
-import { TopicIcon, ErrorBox, Spinner } from "../components/ui";
+import { TopicIcon, ErrorBox, Spinner, Mascot } from "../components/ui";
 import RobotCompanion from "../components/RobotCompanion";
 import TypewriterMessage from "../components/TypewriterMessage";
 import { TTS_TEXT_FALLBACK_MS, speechText } from "../../shared/playback.js";
 export default function Practice() {
+  const { copy } = useCompanion();
   const { id } = useParams(),
     { user, demo, ready, refresh } = useApp();
   const [session, setSession] = useState(null),
@@ -49,10 +51,17 @@ export default function Practice() {
     sendingRef = useRef(false),
     readingRequest = useRef(0),
     typingTimer = useRef(null),
-    seenReplies = useRef({ sessionId: null, lastId: null });
+    seenReplies = useRef({
+      sessionId: null,
+      lastId: null,
+    });
   const scrollToBottom = useCallback(() => {
     const box = bottom.current?.parentElement;
-    if (box) box.scrollTo({ top: box.scrollHeight, behavior: "instant" });
+    if (box)
+      box.scrollTo({
+        top: box.scrollHeight,
+        behavior: "instant",
+      });
   }, []);
   function clearTypingTimer() {
     clearTimeout(typingTimer.current);
@@ -82,7 +91,11 @@ export default function Practice() {
   }, [id, ready, user?.uid, demo]);
   useEffect(() => {
     const box = bottom.current?.parentElement;
-    if (box) box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
+    if (box)
+      box.scrollTo({
+        top: box.scrollHeight,
+        behavior: "smooth",
+      });
   }, [session?.messages.length, sending]);
   const lastReply = session?.messages
     .filter((message) => message.role === "model")
@@ -92,7 +105,10 @@ export default function Practice() {
     const previous = seenReplies.current;
     if (previous.sessionId === id && previous.lastId === lastReply.id) return;
     const firstVisit = previous.sessionId !== id;
-    seenReplies.current = { sessionId: id, lastId: lastReply.id };
+    seenReplies.current = {
+      sessionId: id,
+      lastId: lastReply.id,
+    };
     // Do not replay old conversations; welcome is presented once per browser session.
     if (firstVisit) {
       const welcomeKey = `mathate-welcome:${id}`;
@@ -108,7 +124,7 @@ export default function Practice() {
     }
   }, [session?.id, lastReply?.id, id]);
   async function send(hint = false) {
-    const text = hint ? "Mimo ơi, cho mình một gợi ý nhé." : input.trim();
+    const text = hint ? copy("Mimo ơi, cho mình một gợi ý nhé.") : input.trim();
     if (!text || sendingRef.current || session?.completed) return;
     sendingRef.current = true;
     setSending(true);
@@ -127,15 +143,37 @@ export default function Practice() {
       request.current.text !== text ||
       request.current.hint !== hint
     )
-      request.current = { text, hint, id: crypto.randomUUID() };
+      request.current = {
+        text,
+        hint,
+        id: crypto.randomUUID(),
+      };
+    const optimisticId = `pending-${request.current.id}`;
+    // Render the learner's message before waiting for the AI round trip.
+    setSession((current) => ({
+      ...current,
+      messages: [
+        ...current.messages,
+        {
+          id: optimisticId,
+          role: "user",
+          text,
+        },
+      ],
+    }));
+    if (!hint) setInput("");
     try {
       const result = await api(`/sessions/${id}/messages`, {
         method: "POST",
-        body: { message: text, hint, requestId: request.current.id },
+        body: {
+          message: text,
+          hint,
+          requestId: request.current.id,
+        },
       });
       if (!mounted.current) return;
+      // The server response replaces the optimistic copy with persisted messages.
       setSession(result);
-      if (!hint) setInput("");
       request.current = null;
       if (result.completed) {
         refresh();
@@ -144,11 +182,22 @@ export default function Practice() {
             particleCount: 65,
             spread: 65,
             colors: ["#438c5f", "#edbd5b", "#ae96cf"],
-            origin: { y: 0.65 },
+            origin: {
+              y: 0.65,
+            },
           });
       }
     } catch (e) {
-      if (mounted.current) setError(e.message);
+      if (mounted.current) {
+        setSession((current) => ({
+          ...current,
+          messages: current.messages.filter(
+            (message) => message.id !== optimisticId,
+          ),
+        }));
+        if (!hint) setInput(text);
+        setError(e.message);
+      }
     } finally {
       sendingRef.current = false;
       if (mounted.current) setSending(false);
@@ -207,7 +256,7 @@ export default function Practice() {
       }
     };
     try {
-      await speak(key === "problem" ? text : speechText(text), {
+      await speak(key === "problem" ? copy(text) : speechText(copy(text)), {
         voiceGender,
         onStart: () => {
           if (mounted.current && ownRequest === readingRequest.current) {
@@ -281,7 +330,7 @@ export default function Practice() {
         </Link>
       </div>
     );
-  if (loading) return <Spinner text="Mimo đang mở bài học…" />;
+  if (loading) return <Spinner text={copy("Mimo đang mở bài học…")} />;
   if (!session)
     return (
       <div className="page-wrap">
@@ -331,16 +380,19 @@ export default function Practice() {
                 )}
               </button>
             </div>
-            <h1>{session.title}</h1>
-            <p className="problem-text">{session.problem}</p>
+            <h1>{copy(session.title)}</h1>
+            <p className="problem-text">{copy(session.problem)}</p>
           </section>
-          <section className="chat-panel" aria-label="Hội thoại cùng Mimo">
+          <section
+            className="chat-panel"
+            aria-label={copy("Hội thoại cùng Mimo")}
+          >
             <div className="chat-heading">
               <span className="bot-avatar">
-                <img src="/mimo.png" alt="" />
+                <Mascot alt="" />
               </span>
               <div>
-                <h2>Cùng Mimo giải nào!</h2>
+                <h2>{copy("Cùng Mimo giải nào!")}</h2>
                 <p>Cứ nghĩ thật chậm, mình luôn ở đây.</p>
               </div>
               <span className="chat-status">
@@ -356,12 +408,12 @@ export default function Practice() {
               {session.messages.map((m) => (
                 <div key={m.id} className={`message ${m.role}`}>
                   <span className="message-author">
-                    {m.role === "model" ? "Mimo" : "Bạn"}
+                    {m.role === "model" ? copy("Mimo") : "Bạn"}
                   </span>
                   <div className="message-bubble">
                     {m.role === "model" && m.id === typingMessage ? (
                       <TypewriterMessage
-                        text={m.text}
+                        text={copy(m.text)}
                         paused={typingPaused}
                         onComplete={() =>
                           setTypingMessage((current) =>
@@ -371,13 +423,13 @@ export default function Practice() {
                         onTextUpdate={scrollToBottom}
                       />
                     ) : (
-                      <p>{m.text}</p>
+                      <p>{m.role === "model" ? copy(m.text) : m.text}</p>
                     )}
                     {m.role === "model" && (
                       <button
                         className={`message-speak ${speaking === m.id ? "active" : ""}`}
                         aria-label={
-                          speaking === m.id ? "Dừng đọc" : "Nghe Mimo đọc"
+                          speaking === m.id ? "Dừng đọc" : copy("Nghe Mimo đọc")
                         }
                         onClick={() => read(m.text, m.id)}
                       >
@@ -395,7 +447,7 @@ export default function Practice() {
               ))}
               {sending && (
                 <div className="message model">
-                  <span className="message-author">Mimo</span>
+                  <span className="message-author">{copy("Mimo")}</span>
                   <div className="thinking-bubble" role="status">
                     <span />
                     <span />
@@ -481,7 +533,9 @@ export default function Practice() {
                   </div>
                 </form>
                 <small>
-                  Mimo có thể nhầm. Mình cùng kiểm tra phép tính nhé!
+                  {copy(
+                    "\n                  Mimo có thể nhầm. Mình cùng kiểm tra phép tính nhé!\n                ",
+                  )}
                 </small>
               </div>
             )}
@@ -495,12 +549,12 @@ export default function Practice() {
             />
             <strong>
               {session.completed
-                ? "Mimo tự hào về bạn!"
+                ? copy("Mimo tự hào về bạn!")
                 : speechPhase === "playing"
-                  ? "Mimo đang đọc cho bạn nghe…"
+                  ? copy("Mimo đang đọc cho bạn nghe…")
                   : sending
                     ? "Mình cùng suy nghĩ nhé…"
-                    : "Có Mimo ở đây rồi!"}
+                    : copy("Có Mimo ở đây rồi!")}
             </strong>
             <fieldset className="voice-picker" disabled={speaking !== null}>
               <legend>

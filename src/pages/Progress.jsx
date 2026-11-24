@@ -1,3 +1,4 @@
+import { useCompanion } from "../context/AppearanceContext";
 import React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -170,6 +171,7 @@ export function Collection() {
   );
 }
 export function HistoryPage() {
+  const { copy } = useCompanion();
   const { history, loading, error, refresh } = useApp();
   return (
     <div className="page-wrap">
@@ -188,7 +190,7 @@ export function HistoryPage() {
                 <TopicIcon name={s.topic.icon} />
               </span>
               <div>
-                <h2>{s.title}</h2>
+                <h2>{copy(s.title)}</h2>
                 <p>
                   {s.topic.name} · {difficulties[s.difficulty].label} ·{" "}
                   {new Date(s.createdAt).toLocaleDateString("vi-VN", {
@@ -220,8 +222,9 @@ export function HistoryPage() {
             </Link>
           }
         >
-          Mỗi bài học cùng Mimo sẽ xuất hiện ở đây để bạn có thể ghé lại bất cứ
-          lúc nào.
+          {copy(
+            "\n          Mỗi bài học cùng Mimo sẽ xuất hiện ở đây để bạn có thể ghé lại bất cứ\n          lúc nào.\n        ",
+          )}
         </Empty>
       )}
     </div>

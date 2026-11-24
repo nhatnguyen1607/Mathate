@@ -20,6 +20,7 @@ try {
     "/login",
     "/collection",
     "/practice/test",
+    "/account",
   ]) {
     const response = await fetch(`${base}${path}`);
     assert.equal(response.status, 200);
@@ -36,6 +37,15 @@ try {
             !text.includes(process.env.GEMINI_API_KEY),
             "AI key found in browser build",
           );
+        if (process.env.CLOUDINARY_URL) {
+          const secret = decodeURIComponent(
+            new URL(process.env.CLOUDINARY_URL).password,
+          );
+          assert.ok(
+            !text.includes(secret),
+            "Cloudinary secret found in browser build",
+          );
+        }
         assert.ok(
           !text.includes("BEGIN PRIVATE KEY"),
           "Private key found in browser build",
@@ -45,7 +55,7 @@ try {
   }
   await checkFiles("dist");
   console.log(
-    "Release verified: production disables demo, API rejects guests, SPA routes serve correctly, no AI/private keys in browser build.",
+    "Release verified: production disables demo, API rejects guests, SPA routes serve correctly, no Gemini/Cloudinary secrets or private keys in browser build.",
   );
 } finally {
   await new Promise((resolve) => server.close(resolve));

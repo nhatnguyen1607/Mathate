@@ -11,4 +11,8 @@ A small garden of mathematical discoveries for children 6–11. Quiet, welcoming
 - Mimo welcome reveal is the authored entrance; reduced-motion disables animation. The practice companion uses the same transparent Mimo image, with thinking, success, encouragement, greeting and speech states. The old Spline robot stays archived as an asset. Vietnamese female/male voice choices live under Mimo and lock while audio loads or plays.
 - Visible focus rings, skip navigation, semantic labels, live feedback and focus containment on dialogs.
 
+Account personalization extends this world with sky, violet, rose and peach palettes alongside leaf green. Each theme keeps readable dark primary actions and soft companion surfaces. The account surface uses one editing sheet with personal details, illustrated character radio choices and labeled color swatches. Mimo, Bông the rabbit, Miu the cat and Bắp the puppy share the same plush illustration language and four poses. Preferences belong to the signed-in user's profile.
+
+Shared interface colors use semantic `--brand-*` tokens, with the original green as a fallback for the leaf theme. New interface surfaces and interaction states must use these tokens rather than introducing fixed green values. Topic and award artwork palettes remain independent.
+
 The Impeccable context launcher could not initialize its engine cache in this sandbox. Product context and craft guidance were read directly. The user's cute, child-friendly brief and confirmed age group govern this implementation.

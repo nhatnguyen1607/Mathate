@@ -1,6 +1,6 @@
 /* Content remains readable on children's tablets and smaller phones. */
 .level-emblem > span {
-  color: #536c39;
+  color: var(--brand-primary, #536c39);
   font-size: 12px;
 }
 .fact-panel h2 {
@@ -9,7 +9,7 @@
 .collection-header,
 .collection-header > span,
 .badge-card > strong {
-  color: #5c7149;
+  color: var(--brand-muted, #5c7149);
 }
 .badge-card > strong {
   font-size: 12px;
@@ -18,16 +18,16 @@
 .milestones p,
 .journey-summary p,
 .journey-summary-stat span {
-  color: #5e714d;
+  color: var(--brand-muted, #5e714d);
 }
 .breadcrumb,
 .breadcrumb strong,
 .streak-chip {
-  color: #657353;
+  color: var(--brand-muted, #657353);
 }
 .sidebar-bottom p,
 .sidebar-invitation p {
-  color: #657753;
+  color: var(--brand-muted, #657753);
 }
 .greeting p,
 .section-heading p,
@@ -41,7 +41,7 @@
 .milestones p,
 .history-row p,
 .badge-card p {
-  color: #5e7056;
+  color: var(--brand-muted, #5e7056);
 }
 .topic-card > p {
   font-size: 14px;
@@ -55,21 +55,21 @@
 }
 .topic-card-bottom {
   font-size: 12px;
-  color: #637258;
+  color: var(--brand-muted, #637258);
 }
 .category-tabs button {
   font-size: 13px;
   min-height: 40px;
-  color: #617256;
+  color: var(--brand-muted, #617256);
 }
 .category-tabs button.selected {
-  color: #3c693f;
+  color: var(--brand-muted, #3c693f);
 }
 .search-box input {
   font-size: 13px;
 }
 .search-box input::placeholder {
-  color: #66735f;
+  color: var(--brand-muted, #66735f);
 }
 .section-heading p,
 .greeting p {
@@ -84,17 +84,17 @@
 .recommended,
 .completed-count {
   font-size: 11px;
-  color: #59753e;
+  color: var(--brand-primary, #59753e);
 }
 .gentle-note p {
   font-size: 13px;
 }
 .gentle-note strong {
-  color: #4f6941;
+  color: var(--brand-muted, #4f6941);
 }
 .banner-note {
   font-size: 12px;
-  color: #5e7050;
+  color: var(--brand-muted, #5e7050);
 }
 .level-panel > p,
 .daily-panel > p,
@@ -110,7 +110,7 @@
 .daily-bottom > span,
 .fact-panel button {
   font-size: 12px;
-  color: #61724f;
+  color: var(--brand-muted, #61724f);
 }
 .fact-panel p,
 .fact-panel button {
@@ -121,19 +121,19 @@
   gap: 5px;
 }
 .topic-count {
-  color: #5c6b51;
+  color: var(--brand-muted, #5c6b51);
 }
 .message-bubble p {
   font-size: 16px;
 }
 .message-author {
   font-size: 12px;
-  color: #627452;
+  color: var(--brand-muted, #627452);
 }
 .message-speak {
   min-width: 33px;
   min-height: 30px;
-  color: #65834f;
+  color: var(--brand-muted, #65834f);
   align-items: center;
 }
 .hint-button {
@@ -143,30 +143,30 @@
 }
 .learning-steps li {
   font-size: 13px;
-  color: #6c7c5f;
+  color: var(--brand-muted, #6c7c5f);
 }
 .learning-steps > p {
   font-size: 12px;
-  color: #687b54;
+  color: var(--brand-muted, #687b54);
 }
 .chat-compose > small {
   font-size: 12px;
-  color: #6c7b60;
+  color: var(--brand-muted, #6c7b60);
 }
 .companion-panel > .text-button {
   font-size: 12px;
-  color: #5e754b;
+  color: var(--brand-muted, #5e754b);
   min-height: 35px;
 }
 .chat-heading p {
   font-size: 12px;
-  color: #647554;
+  color: var(--brand-muted, #647554);
 }
 .chat-status {
-  color: #647c50;
+  color: var(--brand-muted, #647c50);
 }
 .message.user .message-bubble {
-  color: #30472a;
+  color: var(--brand-ink, #30472a);
 }
 .login-form-wrap label,
 .admin-editor label {
@@ -174,45 +174,45 @@
 }
 .parent-note {
   font-size: 12px;
-  color: #6a785c;
+  color: var(--brand-muted, #6a785c);
 }
 .login-form-wrap > p:first-of-type {
-  color: #647656;
+  color: var(--brand-muted, #647656);
 }
 .auth-switch,
 .demo-login {
-  color: #687956;
+  color: var(--brand-muted, #687956);
 }
 .form-divider {
-  color: #6b7b5e;
+  color: var(--brand-muted, #6b7b5e);
 }
 .empty-state p,
 .page-heading p,
 .badge-card p,
 .history-row p,
 .milestones p {
-  color: #647556;
+  color: var(--brand-muted, #647556);
 }
 .page-footer {
   font-size: 11px;
-  color: #6a795e;
+  color: var(--brand-muted, #6a795e);
 }
 .page-footer span:last-child {
-  color: #697e56;
+  color: var(--brand-muted, #697e56);
 }
 .completion-banner p {
   font-size: 13px;
-  color: #5e754d;
+  color: var(--brand-muted, #5e754d);
 }
 .date-note {
-  color: #687a5a;
+  color: var(--brand-muted, #687a5a);
 }
 .topic-toolbar .search-box {
   min-height: 40px;
 }
 .account-chip small {
   font-size: 12px;
-  color: #647656;
+  color: var(--brand-muted, #647656);
 }
 @media (max-width: 1020px) {
   .fact-panel {

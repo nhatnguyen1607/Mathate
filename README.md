@@ -49,6 +49,8 @@ Web config không bao gồm quyền Firebase Admin. Nếu thiếu thông tin nà
 
 ## Gemini và giọng đọc
 
+Hồ sơ cá nhân, avatar Cloudinary, bốn nhân vật đồng hành và năm màu chủ đạo: xem [cá nhân hóa](docs/PERSONALIZATION.md). Khi deploy, thêm `CLOUDINARY_URL` hoặc import lại `.env.vercel` mới rồi Redeploy.
+
 `GEMINI_API_KEY` chỉ được đọc trên backend. Model mặc định `gemini-2.5-flash`, có thể đổi qua `GEMINI_MODEL`.
 
 ```powershell

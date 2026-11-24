@@ -1,3 +1,4 @@
+import { useCompanion } from "../context/AppearanceContext";
 import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -21,10 +22,22 @@ import { TopicIcon, ErrorBox, Spinner } from "../components/ui";
 import HeroMimo from "../components/HeroMimo";
 import useDialog from "../hooks/useDialog";
 const categories = [
-  { id: "all", label: "Tất cả chủ đề" },
-  { id: "numbers", label: "Số & phép tính" },
-  { id: "geometry", label: "Hình học" },
-  { id: "life", label: "Toán trong cuộc sống" },
+  {
+    id: "all",
+    label: "Tất cả chủ đề",
+  },
+  {
+    id: "numbers",
+    label: "Số & phép tính",
+  },
+  {
+    id: "geometry",
+    label: "Hình học",
+  },
+  {
+    id: "life",
+    label: "Toán trong cuộc sống",
+  },
 ];
 const facts = [
   "Ong xây tổ thành những hình lục giác. Hình học có mặt cả trong thiên nhiên đấy!",
@@ -32,6 +45,7 @@ const facts = [
   "Số 0 là số tự nhiên duy nhất không dương và cũng không âm. Thú vị nhỉ?",
 ];
 export default function Dashboard() {
+  const { copy } = useCompanion();
   const {
     user,
     demo,
@@ -86,7 +100,11 @@ export default function Dashboard() {
   ).length;
   async function create() {
     if (!user && !demo) {
-      navigate("/login", { state: { from: "/" } });
+      navigate("/login", {
+        state: {
+          from: "/",
+        },
+      });
       return;
     }
     setCreating(true);
@@ -94,7 +112,10 @@ export default function Dashboard() {
     try {
       const session = await api("/sessions", {
         method: "POST",
-        body: { topicId: selected.id, difficulty },
+        body: {
+          topicId: selected.id,
+          difficulty,
+        },
       });
       await refresh();
       navigate(`/practice/${session.id}`);
@@ -109,7 +130,10 @@ export default function Dashboard() {
       <div className="greeting">
         <div>
           <h1>
-            Chào {user?.displayName?.split(" ").at(-1) || "bạn nhỏ"}
+            Chào{" "}
+            {profile.nickname ||
+              (profile.displayName || user?.displayName)?.split(" ").at(-1) ||
+              "bạn nhỏ"}
             <span className="greeting-spark">
               <Sparkles size={26} />
             </span>
@@ -125,7 +149,9 @@ export default function Dashboard() {
           <span>
             {demo
               ? "Bạn đang chơi thử · Bài mẫu có sẵn, điểm trải nghiệm lưu tạm trong phiên máy chủ."
-              : "Ghé chơi cùng Mimo! Đăng nhập để lưu lại từng bước tiến của bạn."}
+              : copy(
+                  "Ghé chơi cùng Mimo! Đăng nhập để lưu lại từng bước tiến của bạn.",
+                )}
           </span>
           {!demo && health?.demoEnabled && (
             <button onClick={enterDemo}>
@@ -146,7 +172,9 @@ export default function Dashboard() {
                 một chuyến <span>phiêu lưu!</span>
               </h2>
               <p>
-                Cùng Mimo nuôi dưỡng trí tò mò
+                {copy(
+                  "\n                Cùng Mimo nuôi dưỡng trí tò mò\n                ",
+                )}
                 <br className="desktop-only" /> và tìm niềm vui trong thế giới
                 toán học.
               </p>
@@ -253,7 +281,7 @@ export default function Dashboard() {
                       ) : null}
                     </div>
                     <h3>{topic.name}</h3>
-                    <p>{topic.description}</p>
+                    <p>{copy(topic.description)}</p>
                     <div className="topic-card-bottom">
                       <span>3 mức độ khám phá</span>
                       <span className="topic-next">
@@ -320,7 +348,11 @@ export default function Dashboard() {
               aria-valuemin={0}
               aria-valuemax={100}
             >
-              <div style={{ width: `${level.progress}%` }} />
+              <div
+                style={{
+                  width: `${level.progress}%`,
+                }}
+              />
             </div>
             <small>
               {level.next
@@ -416,9 +448,14 @@ export default function Dashboard() {
                     disabled={creating}
                   />
                   <span className={`difficulty-leaves leaves-${i + 1}`}>
-                    {Array.from({ length: i + 1 }, (_, n) => (
-                      <Leaf size={19} key={n} />
-                    ))}
+                    {Array.from(
+                      {
+                        length: i + 1,
+                      },
+                      (_, n) => (
+                        <Leaf size={19} key={n} />
+                      ),
+                    )}
                   </span>
                   <span>
                     <strong>{d.label}</strong>
@@ -443,17 +480,21 @@ export default function Dashboard() {
               {creating ? (
                 <>
                   <span className="small-spinner" />
-                  {demo ? "Đang mở bài mẫu…" : "Mimo đang tạo bài toán…"}
+                  {demo ? "Đang mở bài mẫu…" : copy("Mimo đang tạo bài toán…")}
                 </>
               ) : (
                 <>
                   <Sparkles size={18} />
-                  {user || demo ? "Cùng Mimo bắt đầu" : "Đăng nhập để bắt đầu"}
+                  {user || demo
+                    ? copy("Cùng Mimo bắt đầu")
+                    : "Đăng nhập để bắt đầu"}
                 </>
               )}
             </button>
             <small className="dialog-footnote">
-              Cứ thử nhé, Mimo sẽ luôn gợi ý khi bạn cần.
+              {copy(
+                "\n              Cứ thử nhé, Mimo sẽ luôn gợi ý khi bạn cần.\n            ",
+              )}
             </small>
           </section>
         </div>

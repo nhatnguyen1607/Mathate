@@ -10,6 +10,7 @@ import { onAuthStateChanged, signOut, getIdTokenResult } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { api, startDemo, demoId, endDemo } from "../lib/api";
 import { seedTopics } from "../../shared/catalog";
+import { AppearanceProvider } from "./AppearanceContext";
 const Context = createContext(null);
 const emptyProfile = {
   xp: 0,
@@ -39,6 +40,7 @@ export function AppProvider({ children }) {
   useEffect(
     () =>
       onAuthStateChanged(auth, async (value) => {
+        setProfile(emptyProfile);
         if (value) {
           const result = await getIdTokenResult(value).catch(() => ({
             claims: {},
@@ -70,15 +72,21 @@ export function AppProvider({ children }) {
     setLoading(true);
     setError("");
     try {
-      const [p, t, h] = await Promise.all([
+      const [p, t, h] = await Promise.allSettled([
         api("/profile"),
         api("/topics"),
         user?.admin ? Promise.resolve([]) : api("/history"),
       ]);
       if (currentGeneration !== generation.current) return;
-      setProfile(p);
-      setTopics(t);
-      setHistory(h);
+      if (p.status === "fulfilled") setProfile(p.value);
+      if (t.status === "fulfilled") setTopics(t.value);
+      if (h.status === "fulfilled") setHistory(h.value);
+      setError(
+        [p, t, h]
+          .filter((result) => result.status === "rejected")
+          .map((result) => result.reason.message)
+          .join(" "),
+      );
     } catch (e) {
       if (currentGeneration === generation.current) setError(e.message);
     } finally {
@@ -98,25 +106,35 @@ export function AppProvider({ children }) {
     setDemo(false);
     setUser(null);
   };
+  const saveProfile = async (changes) => {
+    const result = await api("/profile", { method: "PATCH", body: changes });
+    setProfile(result);
+    return result;
+  };
+  const acceptProfile = (result) => setProfile(result);
   return (
-    <Context.Provider
-      value={{
-        user,
-        demo,
-        ready,
-        profile,
-        topics,
-        history,
-        refresh,
-        error,
-        loading,
-        health,
-        enterDemo,
-        logout,
-      }}
-    >
-      {children}
-    </Context.Provider>
+    <AppearanceProvider profile={profile}>
+      <Context.Provider
+        value={{
+          user,
+          demo,
+          ready,
+          profile,
+          topics,
+          history,
+          refresh,
+          error,
+          loading,
+          health,
+          enterDemo,
+          logout,
+          saveProfile,
+          acceptProfile,
+        }}
+      >
+        {children}
+      </Context.Provider>
+    </AppearanceProvider>
   );
 }
 export const useApp = () => useContext(Context);
