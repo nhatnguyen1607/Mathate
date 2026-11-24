@@ -1,0 +1,185 @@
+.login-world.login-world-group {
+  isolation: isolate;
+}
+.login-world.login-world-group > .logo,
+.login-world.login-world-group .login-world-copy,
+.login-world.login-world-group .login-world-footer {
+  z-index: 5;
+}
+.login-world.login-world-group .login-mascot-group {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.login-world.login-world-group::after {
+  z-index: 2;
+  width: 85%;
+  height: 32%;
+  right: -21%;
+  bottom: -11%;
+  background: var(--brand-ground, #dbe8c7);
+}
+.login-mascot-friend {
+  position: absolute;
+  transform-origin: center 85%;
+}
+.login-mascot-friend img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.login-mascot-friend[data-character="mimo"] {
+  z-index: 1;
+  right: 2%;
+  bottom: 10%;
+  width: 30%;
+  height: 31%;
+  animation: login-mimo-peek 3.6s ease-in-out 1;
+}
+.login-mascot-friend[data-character="bunny"] {
+  z-index: 3;
+  right: 7%;
+  top: 39%;
+  width: 27%;
+  height: 25%;
+  animation: login-bunny-leap 4.5s ease-in-out 1;
+}
+.login-mascot-friend[data-character="cat"] {
+  z-index: 4;
+  left: 32%;
+  bottom: 25%;
+  width: 38%;
+  height: 22%;
+  animation: login-cat-settle 4.2s ease-in-out 1;
+}
+.login-mascot-friend[data-character="puppy"] {
+  z-index: 3;
+  left: 6%;
+  bottom: 17%;
+  width: 31%;
+  height: 27%;
+  animation: login-puppy-run 4.4s ease-in-out 1;
+}
+@keyframes login-mimo-peek {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  30%,
+  65% {
+    transform: translateY(-7px) rotate(-3deg);
+  }
+}
+@keyframes login-bunny-leap {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  35% {
+    transform: translateY(-15px) rotate(5deg);
+  }
+  70% {
+    transform: translateY(4px) rotate(-6deg);
+  }
+}
+@keyframes login-cat-settle {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+}
+@keyframes login-puppy-run {
+  0%,
+  100% {
+    transform: translateX(0) rotate(-4deg);
+  }
+  30%,
+  65% {
+    transform: translate(-9px, -5px) rotate(3deg);
+  }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .login-mascot-friend[data-character="bunny"] {
+    top: 43%;
+    right: 5%;
+    width: 30%;
+    height: 23%;
+  }
+  .login-mascot-friend[data-character="puppy"] {
+    left: 3%;
+    width: 34%;
+  }
+  .login-mascot-friend[data-character="cat"] {
+    left: 29%;
+    width: 42%;
+    bottom: 24%;
+  }
+}
+@media (max-width: 760px) {
+  .login-world.login-world-group {
+    min-height: 0;
+    padding: 25px 25px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .login-world.login-world-group > .logo {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: flex-start;
+  }
+  .login-world.login-world-group .login-world-copy {
+    margin-top: 24px;
+  }
+  .login-world.login-world-group .login-mascot-group {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 230px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .login-world.login-world-group::after {
+    width: 90%;
+    height: 140px;
+    right: -28%;
+    bottom: -55px;
+  }
+  .login-world.login-world-group h1 {
+    font-size: clamp(23px, 4vw, 29px);
+  }
+  .login-mascot-friend[data-character="bunny"] {
+    right: 4%;
+    top: 0;
+    width: 29%;
+    height: 49%;
+  }
+  .login-mascot-friend[data-character="puppy"] {
+    left: 0;
+    bottom: 4%;
+    width: 32%;
+    height: 60%;
+  }
+  .login-mascot-friend[data-character="cat"] {
+    left: 27%;
+    bottom: 23%;
+    width: 43%;
+    height: 47%;
+  }
+  .login-mascot-friend[data-character="mimo"] {
+    right: 0;
+    bottom: 6%;
+    width: 30%;
+    height: 60%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-mascot-friend {
+    animation: none;
+  }
+}

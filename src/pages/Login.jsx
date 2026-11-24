@@ -14,7 +14,8 @@ import { Sparkles, Eye, EyeOff, ChevronLeft, Check, Mail } from "lucide-react";
 import { auth } from "../lib/firebase";
 import { useApp } from "../context/AppContext";
 import { Logo } from "../components/Layout";
-import { Mascot, ErrorBox } from "../components/ui";
+import { ErrorBox } from "../components/ui";
+import LoginMascots from "../components/LoginMascots";
 const messages = {
   "auth/user-disabled":
     "Tài khoản đã bị khóa. Bạn liên hệ quản trị viên để được hỗ trợ nhé.",
@@ -101,7 +102,7 @@ export default function Login() {
   }
   return (
     <div className="login-page">
-      <section className="login-world">
+      <section className="login-world login-world-group">
         <Logo />
         <div className="login-world-copy">
           <h1>
@@ -112,12 +113,12 @@ export default function Login() {
             <span>chút tò mò.</span>
           </h1>
           <p>
-            {copy("\n            Cùng Mimo khám phá toán học\n            ")}
+            {copy("\n            Cùng khám phá toán học\n            ")}
             <br />
             theo cách thật vui, thật là bạn.
           </p>
         </div>
-        <Mascot />
+        <LoginMascots />
         <span className="login-spark">
           <Sparkles size={38} />
         </span>
