@@ -1,4 +1,5 @@
 import { auth } from "./store.js";
+import { accountRole } from "../../shared/roles.js";
 
 export function publicAccount(user) {
   return {
@@ -6,6 +7,7 @@ export function publicAccount(user) {
     email: user.email || "",
     displayName: user.displayName || "",
     admin: user.customClaims?.admin === true,
+    role: accountRole(user.customClaims),
     disabled: user.disabled,
     emailVerified: user.emailVerified,
     createdAt: user.metadata.creationTime || null,
@@ -42,7 +44,22 @@ export async function updateAccount(uid, changes, actorUid) {
       new Error("Không thể khóa tài khoản của bạn hoặc quản trị viên khác."),
       { status: 409 },
     );
-  const updated = await auth.updateUser(uid, changes);
+  if (changes.role && (uid === actorUid || user.customClaims?.admin === true))
+    throw Object.assign(
+      new Error(
+        "Không thể đổi vai trò của bạn hoặc quản trị viên qua mục này.",
+      ),
+      { status: 409 },
+    );
+  const { role, ...fields } = changes;
+  const updated = Object.keys(fields).length
+    ? await auth.updateUser(uid, fields)
+    : user;
+  if (role) {
+    const claims = { ...user.customClaims, role };
+    await auth.setCustomUserClaims(uid, claims);
+    updated.customClaims = claims;
+  }
   if (changes.disabled === true) await auth.revokeRefreshTokens(uid);
   return publicAccount(updated);
 }

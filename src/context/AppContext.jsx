@@ -11,6 +11,7 @@ import { auth } from "../lib/firebase";
 import { api, startDemo, demoId, endDemo } from "../lib/api";
 import { seedTopics } from "../../shared/catalog";
 import { AppearanceProvider } from "./AppearanceContext";
+import { accountRole } from "../../shared/roles";
 const Context = createContext(null);
 const emptyProfile = {
   xp: 0,
@@ -42,7 +43,7 @@ export function AppProvider({ children }) {
       onAuthStateChanged(auth, async (value) => {
         setProfile(emptyProfile);
         if (value) {
-          const result = await getIdTokenResult(value).catch(() => ({
+          const result = await getIdTokenResult(value, true).catch(() => ({
             claims: {},
           }));
           setUser({
@@ -51,6 +52,7 @@ export function AppProvider({ children }) {
               return value.displayName;
             },
             admin: result.claims.admin === true,
+            role: accountRole(result.claims),
           });
           setDemo(false);
           endDemo();
@@ -59,6 +61,25 @@ export function AppProvider({ children }) {
       }),
     [],
   );
+  useEffect(() => {
+    const updateRole = async () => {
+      const current = auth.currentUser;
+      if (!current) return;
+      try {
+        const token = await getIdTokenResult(current, true);
+        const role = accountRole(token.claims);
+        setUser((old) =>
+          old?.uid === current.uid && old.role !== role
+            ? { ...old, role, admin: role === "admin" }
+            : old,
+        );
+      } catch {
+        /* The next API call reports an expired sign-in. */
+      }
+    };
+    window.addEventListener("focus", updateRole);
+    return () => window.removeEventListener("focus", updateRole);
+  }, []);
   const refresh = useCallback(async () => {
     const currentGeneration = ++generation.current;
     if (!user && !demo) {
@@ -75,7 +96,9 @@ export function AppProvider({ children }) {
       const [p, t, h] = await Promise.allSettled([
         api("/profile"),
         api("/topics"),
-        user?.admin ? Promise.resolve([]) : api("/history"),
+        user?.admin || user?.role === "teacher"
+          ? Promise.resolve([])
+          : api("/history"),
       ]);
       if (currentGeneration !== generation.current) return;
       if (p.status === "fulfilled") setProfile(p.value);

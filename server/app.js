@@ -11,10 +11,13 @@ import { synthesizeSpeech, ttsConfigured } from "./services/tts.js";
 import { listAccounts, updateAccount } from "./services/accounts.js";
 import { companions, themes } from "../shared/personalization.js";
 import { avatarUploadSignature, verifyAvatar } from "./services/cloudinary.js";
+import { classroomRouter } from "./routes/classrooms.js";
+import { classrooms } from "./services/classrooms.js";
+import { accountRole } from "../shared/roles.js";
 export const app = express();
 if (process.env.VERCEL === "1") app.set("trust proxy", 1);
 app.disable("x-powered-by");
-app.use(express.json({ limit: "32kb" }));
+app.use(express.json({ limit: "96kb" }));
 app.use((req, res, next) => {
   res.set("X-Content-Type-Options", "nosniff");
   res.set("Referrer-Policy", "same-origin");
@@ -35,7 +38,7 @@ app.use(
   "/api",
   rateLimit({
     windowMs: 60000,
-    limit: 90,
+    limit: 600,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     message: { error: "Bạn thao tác hơi nhanh. Đợi một chút rồi thử lại nhé." },
@@ -91,6 +94,7 @@ app.patch("/api/admin/accounts/:uid", admin, async (req, res) => {
     .object({
       displayName: z.string().trim().min(1).max(60).optional(),
       disabled: z.boolean().optional(),
+      role: z.enum(["student", "teacher"]).optional(),
     })
     .strict()
     .refine((value) => Object.keys(value).length > 0)
@@ -109,6 +113,7 @@ const topicSchema = z.object({
   order: z.number().int().min(0).max(1000).optional(),
 });
 const idSchema = z.string().regex(/^[a-zA-Z0-9-]{1,80}$/);
+app.use("/api/classrooms", classroomRouter);
 app.get("/api/topics", async (req, res) =>
   res.json(await store.topics(req.user.demo, req.user.admin === true)),
 );
@@ -201,13 +206,42 @@ function publicSession(s) {
     },
   };
 }
+async function checkClassSession(s, user) {
+  if (!s.classId) return;
+  const current = await auth.getUser(user.uid);
+  await classrooms.application(
+    { uid: user.uid, role: accountRole(current.customClaims) },
+    s.classId,
+    s.activityId,
+  );
+}
 app.post("/api/sessions", aiLimit, async (req, res) => {
   const input = z
     .object({
       topicId: idSchema,
       difficulty: z.enum(["easy", "medium", "hard"]),
+      classId: idSchema.optional(),
+      activityId: idSchema.optional(),
     })
+    .refine((v) => !!v.classId === !!v.activityId)
     .parse(req.body);
+  if (input.classId) {
+    if (req.user.demo)
+      return res
+        .status(403)
+        .json({ error: "Bạn đăng nhập để học cùng lớp nhé." });
+    const currentUser = await auth.getUser(req.user.uid);
+    const assigned = await classrooms.application(
+      { uid: req.user.uid, role: accountRole(currentUser.customClaims) },
+      input.classId,
+      input.activityId,
+    );
+    if (assigned.topicId !== input.topicId)
+      return res
+        .status(400)
+        .json({ error: "Chủ đề không khớp với bài học của lớp." });
+    input.difficulty = assigned.difficulty;
+  }
   const topic = await store.topic(input.topicId, req.user.demo);
   if (!topic?.active)
     return res
@@ -219,6 +253,9 @@ app.post("/api/sessions", aiLimit, async (req, res) => {
   const session = {
     id: randomUUID(),
     uid: req.user.uid,
+    ...(input.classId
+      ? { classId: input.classId, activityId: input.activityId }
+      : {}),
     topic,
     difficulty: input.difficulty,
     title: problem.title,
@@ -251,6 +288,7 @@ app.get("/api/sessions/:id", async (req, res) => {
     return res.status(404).json({
       error: "Không tìm thấy bài học. Bạn quay về chọn một bài mới nhé.",
     });
+  await checkClassSession(s, req.user);
   res.json(publicSession(s));
 });
 app.post("/api/sessions/:id/messages", aiLimit, async (req, res) => {
@@ -272,6 +310,7 @@ app.post("/api/sessions/:id/messages", aiLimit, async (req, res) => {
     let s = await store.getSession(id, req.user.demo);
     if (!s || s.uid !== req.user.uid)
       return res.status(404).json({ error: "Không tìm thấy bài học." });
+    await checkClassSession(s, req.user);
     if (s.completed || s.messages.some((m) => m.requestId === requestId))
       return res.json(publicSession(s));
     if (s.messages.length >= 100)

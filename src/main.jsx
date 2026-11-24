@@ -1,13 +1,17 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { AppProvider } from "./context/AppContext";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
+import { AppProvider, useApp } from "./context/AppContext";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
 import Practice from "./pages/Practice";
 import Admin from "./pages/Admin";
+import Teacher, { TeacherClass } from "./pages/Teacher";
+import TeacherActivity from "./pages/TeacherActivity";
+import StudentClasses, { StudentClass } from "./pages/Classrooms";
+import Warmup from "./pages/Warmup";
 import { Journey, Collection, HistoryPage } from "./pages/Progress";
 import "@fontsource-variable/nunito";
 import "./styles.css";
@@ -33,6 +37,14 @@ class ErrorBoundary extends React.Component {
     );
   }
 }
+function Home() {
+  const { user, ready } = useApp();
+  return ready && user?.role === "teacher" ? (
+    <Navigate to="/teacher" replace />
+  ) : (
+    <Dashboard />
+  );
+}
 const root = createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
@@ -47,7 +59,19 @@ root.render(
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<Layout />}>
-              <Route index element={<Dashboard />} />
+              <Route index element={<Home />} />
+              <Route path="teacher" element={<Teacher />} />
+              <Route path="teacher/:classId" element={<TeacherClass />} />
+              <Route
+                path="teacher/:classId/topics/:activityId"
+                element={<TeacherActivity />}
+              />
+              <Route path="classes" element={<StudentClasses />} />
+              <Route path="classes/:classId" element={<StudentClass />} />
+              <Route
+                path="classes/:classId/warmup/:activityId"
+                element={<Warmup />}
+              />
               <Route path="practice/:id" element={<Practice />} />
               <Route path="journey" element={<Journey />} />
               <Route path="collection" element={<Collection />} />

@@ -16,6 +16,7 @@ import { useApp } from "../context/AppContext";
 import { Logo } from "../components/Layout";
 import { ErrorBox } from "../components/ui";
 import LoginMascots from "../components/LoginMascots";
+import { accountRole } from "../../shared/roles";
 const messages = {
   "auth/user-disabled":
     "Tài khoản đã bị khóa. Bạn liên hệ quản trị viên để được hỗ trợ nhé.",
@@ -62,9 +63,17 @@ export default function Login() {
     try {
       await action();
       const token = await getIdTokenResult(auth.currentUser, true);
-      navigate(token.claims.admin === true ? "/admin" : destination, {
-        replace: true,
-      });
+      const role = accountRole(token.claims);
+      navigate(
+        role === "admin"
+          ? "/admin"
+          : role === "teacher"
+            ? "/teacher"
+            : destination,
+        {
+          replace: true,
+        },
+      );
     } catch (e) {
       setError(messages[e.code] || "Chưa đăng nhập được. Bạn thử lại sau nhé.");
     } finally {

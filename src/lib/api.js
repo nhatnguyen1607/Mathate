@@ -19,10 +19,14 @@ export async function api(path, options = {}) {
     ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   });
   if (response.status === 204) return null;
+  if (response.ok && options.blob) return response.blob();
   const data = await response
     .json()
     .catch(() => ({ error: "Không kết nối được máy chủ. Bạn thử lại nhé." }));
   if (!response.ok)
-    throw new Error(data.error || "Có chút trục trặc. Bạn thử lại nhé.");
+    throw Object.assign(
+      new Error(data.error || "Có chút trục trặc. Bạn thử lại nhé."),
+      { status: response.status },
+    );
   return data;
 }

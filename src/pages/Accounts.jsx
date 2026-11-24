@@ -11,6 +11,7 @@ import {
 import { api } from "../lib/api";
 import { ErrorBox, Empty, Spinner } from "../components/ui";
 import useDialog from "../hooks/useDialog";
+import { roleNames } from "../../shared/roles";
 const date = (value) =>
   value
     ? new Intl.DateTimeFormat("vi-VN", {
@@ -60,7 +61,7 @@ export function AccountTable({ users, actorUid, busy, onEdit, onToggle }) {
                 <span
                   className={user.admin ? "account-role admin" : "account-role"}
                 >
-                  {user.admin ? "Quản trị viên" : "Người học"}
+                  {roleNames[user.role || (user.admin ? "admin" : "student")]}
                 </span>
               </td>
               <td>
@@ -119,6 +120,7 @@ export default function Accounts({ actorUid }) {
     [notice, setNotice] = useState(""),
     [editing, setEditing] = useState(null),
     [name, setName] = useState(""),
+    [role, setRole] = useState("student"),
     [confirm, setConfirm] = useState(null),
     [busy, setBusy] = useState(false);
   const generation = useRef(0);
@@ -161,11 +163,13 @@ export default function Accounts({ actorUid }) {
       setEditing(null);
       setConfirm(null);
       setNotice(
-        changes.displayName
-          ? "Đã cập nhật tên tài khoản."
-          : changes.disabled
-            ? "Đã khóa tài khoản. Người dùng không thể tiếp tục truy cập."
-            : "Đã mở khóa. Người dùng có thể đăng nhập lại.",
+        changes.role
+          ? `Đã lưu tài khoản với quyền ${roleNames[changes.role].toLowerCase()}. Người dùng tải lại trang hoặc đăng nhập lại để cập nhật giao diện.`
+          : changes.displayName
+            ? "Đã cập nhật tên tài khoản."
+            : changes.disabled
+              ? "Đã khóa tài khoản. Người dùng không thể tiếp tục truy cập."
+              : "Đã mở khóa. Người dùng có thể đăng nhập lại.",
       );
     } catch (e) {
       setError(e.message);
@@ -234,11 +238,14 @@ export default function Accounts({ actorUid }) {
           className="account-editor"
           onSubmit={(e) => {
             e.preventDefault();
-            update(editing, { displayName: name.trim() });
+            update(editing, {
+              displayName: name.trim(),
+              ...(!editing.admin && editing.uid !== actorUid ? { role } : {}),
+            });
           }}
         >
           <div>
-            <h3>Sửa tên tài khoản</h3>
+            <h3>Tên và quyền tài khoản</h3>
             <p>{editing.email}</p>
           </div>
           <label>
@@ -252,9 +259,27 @@ export default function Accounts({ actorUid }) {
               required
             />
           </label>
+          {!editing.admin && editing.uid !== actorUid && (
+            <label>
+              Vai trò
+              <select
+                aria-label="Vai trò"
+                aria-describedby="account-role-help"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="student">Học sinh</option>
+                <option value="teacher">Giáo viên</option>
+              </select>
+              <small id="account-role-help">
+                Tài khoản tải lại trang hoặc đăng nhập lại để thấy giao diện
+                mới.
+              </small>
+            </label>
+          )}
           <div className="editor-actions">
             <button className="button" disabled={busy || !name.trim()}>
-              {busy ? "Đang lưu…" : "Lưu tên"}
+              {busy ? "Đang lưu…" : "Lưu thay đổi"}
             </button>
             <button
               type="button"
@@ -284,6 +309,7 @@ export default function Accounts({ actorUid }) {
             onEdit={(user) => {
               setEditing(user);
               setName(user.displayName);
+              setRole(user.role || "student");
               setNotice("");
             }}
             onToggle={setConfirm}

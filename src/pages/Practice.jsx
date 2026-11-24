@@ -343,9 +343,12 @@ export default function Practice() {
   return (
     <div className="practice-page page-wrap">
       <div className="practice-top">
-        <Link to="/" className="back-link">
+        <Link
+          to={session.classId ? `/classes/${session.classId}` : "/"}
+          className="back-link"
+        >
           <ChevronLeft size={18} />
-          Về khám phá
+          {session.classId ? "Về lớp của mình" : "Về khám phá"}
         </Link>
         <span className="practice-difficulty">
           <LeafIcon />

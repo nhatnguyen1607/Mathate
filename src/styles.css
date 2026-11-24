@@ -147,6 +147,7 @@ img {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 .sidebar {
   width: 240px;
@@ -265,6 +266,18 @@ img {
   margin-left: 240px;
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.workspace > main {
+  flex: 1;
+  min-width: 0;
+}
+.workspace > .topbar,
+.workspace > .page-footer {
+  flex-shrink: 0;
 }
 .topbar {
   height: 85px;

@@ -15,6 +15,7 @@ import {
   Sprout,
   Flame,
   BookOpen,
+  School,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { getLevel } from "../../shared/catalog";
@@ -33,6 +34,7 @@ export function Logo() {
 import { useCompanion } from "../context/AppearanceContext";
 const links = [
   { path: "/", icon: Compass, label: "Khám phá" },
+  { path: "/classes", icon: School, label: "Lớp của mình" },
   { path: "/journey", icon: Map, label: "Hành trình của mình" },
   { path: "/collection", icon: Award, label: "Bộ sưu tập" },
   { path: "/history", icon: History, label: "Góc ôn tập" },
@@ -41,6 +43,13 @@ const links = [
 export default function Layout() {
   const { copy } = useCompanion();
   const { user, demo, profile, logout } = useApp();
+  const isTeacher = user?.role === "teacher";
+  const navigation = isTeacher
+    ? [
+        { path: "/teacher", icon: School, label: "Lớp đang dạy" },
+        { path: "/account", icon: UserRound, label: "Tài khoản của mình" },
+      ]
+    : links;
   const [menu, setMenu] = useState(false);
   const location = useLocation();
   const [mobile, setMobile] = useState(
@@ -58,8 +67,12 @@ export default function Layout() {
   useDialog(menu && mobile, ".sidebar", () => setMenu(false));
   const current = location.pathname.startsWith("/practice")
     ? "Cùng Mimo giải toán"
-    : links.find((l) => l.path === location.pathname)?.label ||
-      "Quản trị Mathate";
+    : location.pathname.startsWith("/teacher")
+      ? "Không gian giáo viên"
+      : location.pathname.startsWith("/classes")
+        ? "Lớp của mình"
+        : navigation.find((l) => l.path === location.pathname)?.label ||
+          "Quản trị Mathate";
   const level = getLevel(profile.xp),
     name =
       profile.nickname ||
@@ -83,7 +96,7 @@ export default function Layout() {
           </button>
         </div>
         <nav aria-label="Điều hướng chính">
-          {links.map(({ path, icon: Icon, label }) => (
+          {navigation.map(({ path, icon: Icon, label }) => (
             <NavLink
               key={path}
               to={path}
@@ -106,13 +119,17 @@ export default function Layout() {
             <Mascot />
           </div>
           <strong>
-            Một chút mỗi ngày,
+            {isTeacher ? "Mỗi lớp học," : "Một chút mỗi ngày,"}
             <br />
-            giỏi hơn thật nhiều!
+            {isTeacher ? "một vườn khám phá." : "giỏi hơn thật nhiều!"}
           </strong>
           <p>{copy("Mimo luôn ở đây cùng bạn.")}</p>
-          <Link to="/journey" onClick={() => setMenu(false)}>
-            Xem hành trình <ChevronRight size={16} />
+          <Link
+            to={isTeacher ? "/teacher" : "/journey"}
+            onClick={() => setMenu(false)}
+          >
+            {isTeacher ? "Về lớp đang dạy" : "Xem hành trình"}{" "}
+            <ChevronRight size={16} />
           </Link>
         </div>
         <div className="sidebar-bottom">
@@ -162,11 +179,13 @@ export default function Layout() {
             <strong>{copy(current)}</strong>
           </div>
           <div className="topbar-right">
-            <span className="streak-chip" title="Số ngày học liên tiếp">
-              <Flame size={18} />
-              <b>{profile.streak}</b>
-              <span>ngày</span>
-            </span>
+            {!isTeacher && (
+              <span className="streak-chip" title="Số ngày học liên tiếp">
+                <Flame size={18} />
+                <b>{profile.streak}</b>
+                <span>ngày</span>
+              </span>
+            )}
             {!user && !demo ? (
               <Link className="button button-small" to="/login">
                 Đăng nhập
@@ -191,7 +210,9 @@ export default function Layout() {
                 <span>
                   <strong>{name}</strong>
                   <small>
-                    Cấp {level.number} · {level.name}
+                    {isTeacher
+                      ? "Giáo viên"
+                      : `Cấp ${level.number} · ${level.name}`}
                   </small>
                 </span>
               </Link>

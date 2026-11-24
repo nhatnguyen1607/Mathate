@@ -18,7 +18,7 @@ const app = initializeApp({
     : {}),
 });
 export const auth = getAuth(app);
-const db = getFirestore(app);
+export const db = getFirestore(app);
 const topics = new Map(seedTopics.map((t) => [t.id, structuredClone(t)]));
 const sessions = new Map();
 const profiles = new Map();

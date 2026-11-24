@@ -250,7 +250,8 @@
   min-width: 180px;
   font-size: 13px;
 }
-.account-editor input {
+.account-editor input,
+.account-editor select {
   background: white;
   padding: 10px;
   border: 1px solid var(--brand-border, #bdcfb5);
