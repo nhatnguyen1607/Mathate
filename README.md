@@ -79,6 +79,8 @@ Micro vẫn dùng SpeechRecognition, cần người dùng cấp quyền. Bạn �
 
 ## Kiểm thử và bản production
 
+Deploy cả frontend và backend lên Vercel: xem [hướng dẫn Vercel](docs/VERCEL.md). Cấu hình đã có ở `vercel.json` và `api/index.js`; credentials trên hosting dùng biến JSON thay cho đường dẫn file local.
+
 ```powershell
 npm test
 npm run build

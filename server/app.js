@@ -10,6 +10,7 @@ import { demoProblem, demoReply } from "./services/demo.js";
 import { synthesizeSpeech, ttsConfigured } from "./services/tts.js";
 import { listAccounts, updateAccount } from "./services/accounts.js";
 export const app = express();
+if (process.env.VERCEL === "1") app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(express.json({ limit: "32kb" }));
 app.use((req, res, next) => {
