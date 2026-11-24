@@ -16,7 +16,13 @@ npm run dev
 
 Frontend: [http://127.0.0.1:5173](http://127.0.0.1:5173). API: `http://127.0.0.1:8081`.
 
-Trong bản làm việc hiện tại `.env` đã có khóa Gemini do chủ dự án cung cấp. File này bị gitignore; không sao chép sang frontend. Firebase web config đã được cấu hình đúng project `mathate-8cd62` trong `src/lib/firebase.js`.
+Trong bản làm việc hiện tại `.env` đã có cấu hình do chủ dự án cung cấp và bị gitignore. `src/lib/firebase.js` đọc toàn bộ Firebase web config từ các biến `VITE_FIREBASE_*`, không có giá trị khóa viết trực tiếp trong source. `.env.example` chỉ chứa tên biến và giá trị trống cho cấu hình web.
+
+Khi cài mới, điền các biến `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_MEASUREMENT_ID` theo Firebase Console → Project settings → Your apps. Khi deploy, đặt chúng trong môi trường **build**, rồi build lại; khởi động lại dev server khi đổi `.env`. Vite sẽ báo rõ tên biến bắt buộc còn thiếu.
+
+`VITE_*` là cấu hình frontend và vẫn có trong bundle trình duyệt. Đây không phải nơi giữ bí mật backend: chỉ các trường web config Firebase dùng tiền tố này. `GEMINI_API_KEY`, Firebase Admin và TTS credentials vẫn chỉ ở backend, không dùng tiền tố `VITE_`. Firebase web API key dùng để định danh ứng dụng; quyền truy cập dữ liệu vẫn do Rules/IAM/Auth kiểm soát. [Vite env](https://vite.dev/guide/env-and-mode), [Firebase API keys](https://firebase.google.com/docs/projects/api-keys).
+
+Chuyển sang env không xóa khóa khỏi các commit cũ hoặc tự đóng cảnh báo GitHub. Các thay đổi này không ghi lại lịch sử Git hay thay đổi/thu hồi khóa trên Google Cloud.
 
 Chọn **Chơi thử** để xem toàn bộ luồng với bài mẫu, phản hồi kịch bản và XP tạm. Chế độ này không gọi Gemini và không ghi Firebase. Restart server sẽ mất dữ liệu demo. Đăng nhập tài khoản thật để dùng AI và lưu hành trình sau khi cấu hình Firebase Admin.
 
