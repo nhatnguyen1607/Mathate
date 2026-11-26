@@ -7,10 +7,6 @@
   --school-tint: var(--brand-soft, #f1f6ec);
   --school-border: var(--brand-border, #ccdbc2);
 }
-.school-page h1 {
-  font-size: 30px;
-  letter-spacing: -0.025em;
-}
 .school-page h2 {
   font-size: 21px;
   letter-spacing: -0.015em;
@@ -1667,9 +1663,6 @@
   .teacher-class-aside,
   .teacher-overview-aside {
     gap: 27px;
-  }
-  .school-page h1 {
-    font-size: 25px;
   }
   .school-page-heading {
     flex-wrap: wrap;

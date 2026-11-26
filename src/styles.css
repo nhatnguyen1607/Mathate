@@ -1256,7 +1256,9 @@ img {
 .page-heading {
   margin: 4px 0 30px;
 }
-.page-heading h1 {
+.page-heading h1,
+.school-page h1,
+.account-settings-heading h1 {
   font-size: 29px;
   font-weight: 900;
   letter-spacing: -0.6px;
@@ -2607,7 +2609,9 @@ img {
   .preview-notice button {
     font-size: 11px;
   }
-  .page-heading h1 {
+  .page-heading h1,
+  .school-page h1,
+  .account-settings-heading h1 {
     font-size: 27px;
   }
   .page-heading p {
