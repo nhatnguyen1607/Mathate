@@ -1,4 +1,6 @@
 import { auth } from "./firebase";
+import { signOut } from "firebase/auth";
+import { createApiClient } from "./api-client";
 export function demoId() {
   return localStorage.getItem("mathate-demo-id");
 }
@@ -8,25 +10,4 @@ export function startDemo() {
 export function endDemo() {
   localStorage.removeItem("mathate-demo-id");
 }
-export async function api(path, options = {}) {
-  const headers = { "Content-Type": "application/json" };
-  if (auth.currentUser)
-    headers.Authorization = `Bearer ${await auth.currentUser.getIdToken()}`;
-  else if (demoId()) headers["X-Mathate-Demo"] = demoId();
-  const response = await fetch(`/api${path}`, {
-    ...options,
-    headers: { ...headers, ...options.headers },
-    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
-  });
-  if (response.status === 204) return null;
-  if (response.ok && options.blob) return response.blob();
-  const data = await response
-    .json()
-    .catch(() => ({ error: "Không kết nối được máy chủ. Bạn thử lại nhé." }));
-  if (!response.ok)
-    throw Object.assign(
-      new Error(data.error || "Có chút trục trặc. Bạn thử lại nhé."),
-      { status: response.status },
-    );
-  return data;
-}
+export const api = createApiClient({ auth, signOut, demoId });

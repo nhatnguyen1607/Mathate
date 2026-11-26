@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { onAuthStateChanged, signOut, getIdTokenResult } from "firebase/auth";
+import { onIdTokenChanged, signOut, getIdTokenResult } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { api, startDemo, demoId, endDemo } from "../lib/api";
 import { seedTopics } from "../../shared/catalog";
@@ -17,6 +17,8 @@ const emptyProfile = {
   xp: 0,
   solved: 0,
   streak: 0,
+  bestStreak: 0,
+  studyDayCount: 0,
   topicStats: {},
   badges: [],
   studiedDates: [],
@@ -38,29 +40,53 @@ export function AppProvider({ children }) {
       .then(setHealth)
       .catch(() => {});
   }, []);
-  useEffect(
-    () =>
-      onAuthStateChanged(auth, async (value) => {
+  useEffect(() => {
+    let revision = 0,
+      active = true,
+      previousUid;
+    const unsubscribe = onIdTokenChanged(auth, async (value) => {
+      const currentRevision = ++revision;
+      if (previousUid !== value?.uid) {
+        ++generation.current;
         setProfile(emptyProfile);
-        if (value) {
-          const result = await getIdTokenResult(value, true).catch(() => ({
-            claims: {},
-          }));
-          setUser({
-            uid: value.uid,
-            get displayName() {
-              return value.displayName;
-            },
-            admin: result.claims.admin === true,
-            role: accountRole(result.claims),
-          });
-          setDemo(false);
-          endDemo();
-        } else setUser(null);
-        setReady(true);
-      }),
-    [],
-  );
+        setHistory([]);
+        previousUid = value?.uid;
+      }
+      if (value) {
+        const result = await getIdTokenResult(value).catch(() => ({
+          claims: {},
+        }));
+        if (
+          !active ||
+          revision !== currentRevision ||
+          auth.currentUser !== value
+        )
+          return;
+        const nextRole = accountRole(result.claims);
+        setUser((old) =>
+          old?.uid === value.uid && old.role === nextRole
+            ? old
+            : {
+                uid: value.uid,
+                get displayName() {
+                  return value.displayName;
+                },
+                admin: result.claims.admin === true,
+                role: nextRole,
+              },
+        );
+        setDemo(false);
+        endDemo();
+      } else if (active) setUser(null);
+      if (!active) return;
+      setReady(true);
+    });
+    return () => {
+      active = false;
+      ++revision;
+      unsubscribe();
+    };
+  }, []);
   useEffect(() => {
     const updateRole = async () => {
       const current = auth.currentUser;

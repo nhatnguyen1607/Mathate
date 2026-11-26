@@ -3,9 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {
   Sprout,
-  Compass,
   Star,
-  Award,
   Check,
   LockKeyhole,
   Flame,
@@ -97,79 +95,7 @@ export function Journey() {
     </div>
   );
 }
-const badges = [
-  {
-    id: "first-step",
-    icon: Sprout,
-    name: "Bước chân đầu tiên",
-    description: "Hoàn thành bài toán đầu tiên.",
-    color: "green",
-  },
-  {
-    id: "five-problems",
-    icon: Star,
-    name: "Ngôi sao chăm chỉ",
-    description: "Tự giải và kiểm tra 5 bài toán.",
-    color: "yellow",
-  },
-  {
-    id: "explorer",
-    icon: Compass,
-    name: "Trí tò mò không giới hạn",
-    description: "Hoàn thành bài ở 3 chủ đề khác nhau.",
-    color: "purple",
-  },
-];
-export function Collection() {
-  const { profile, error, refresh } = useApp();
-  return (
-    <div className="page-wrap">
-      <div className="page-heading">
-        <h1>Bộ sưu tập bé xinh</h1>
-        <p>Những dấu ấn cho từng lần bạn thử sức.</p>
-      </div>
-      <ErrorBox message={error} retry={refresh} />
-      <div className="collection-header">
-        <Award size={25} />
-        <strong>
-          {profile.badges?.length || 0}/{badges.length} huy hiệu
-        </strong>
-        <span>Học vui, sưu tập những điều đáng nhớ.</span>
-      </div>
-      <div className="badge-grid">
-        {badges.map(({ id, icon: Icon, name, description, color }) => {
-          const earned = profile.badges?.includes(id);
-          return (
-            <article
-              key={id}
-              className={`badge-card ${earned ? "earned" : "locked"}`}
-            >
-              <div className={`badge-art ${color}`}>
-                <Icon size={58} strokeWidth={1.5} />
-                <span>
-                  {earned ? <Check size={15} /> : <LockKeyhole size={15} />}
-                </span>
-              </div>
-              <h2>{name}</h2>
-              <p>{description}</p>
-              <strong>
-                {earned ? "Đã nằm trong bộ sưu tập!" : "Đang chờ bạn khám phá"}
-              </strong>
-            </article>
-          );
-        })}
-      </div>
-      <div className="gentle-note">
-        <Star />
-        <p>
-          Huy hiệu ghi lại nỗ lực của bạn.
-          <br />
-          <strong>Không cần so sánh với ai, chỉ cần vui cùng toán!</strong>
-        </p>
-      </div>
-    </div>
-  );
-}
+export { default as Collection } from "./Collection";
 export function HistoryPage() {
   const { copy } = useCompanion();
   const { history, loading, error, refresh } = useApp();

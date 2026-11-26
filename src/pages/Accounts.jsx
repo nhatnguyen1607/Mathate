@@ -333,10 +333,6 @@ export default function Accounts({ actorUid }) {
           </Empty>
         )
       )}
-      <p className="accounts-footnote">
-        Tài khoản đăng ký qua email hoặc Google sẽ tự xuất hiện tại đây. Quản
-        trị viên được bảo vệ khỏi thao tác khóa.
-      </p>
       {confirm && (
         <div
           className="delete-confirm account-confirm"

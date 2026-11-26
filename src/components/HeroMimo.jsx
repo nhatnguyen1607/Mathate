@@ -82,7 +82,7 @@ function CompanionGallery() {
             width={1024}
             height={1024}
             decoding="async"
-            fetchPriority={index === 0 ? "high" : "low"}
+            fetchpriority={index === 0 ? "high" : "low"}
             className={"mimo-pose " + (index === current ? "is-current" : "")}
             data-pose={pose.id}
             onLoad={() =>

@@ -6,14 +6,6 @@
 .fact-panel h2 {
   color: #75602f;
 }
-.collection-header,
-.collection-header > span,
-.badge-card > strong {
-  color: var(--brand-muted, #5c7149);
-}
-.badge-card > strong {
-  font-size: 12px;
-}
 .milestones li > div:nth-child(2) > span,
 .milestones p,
 .journey-summary p,
@@ -39,8 +31,7 @@
 .daily-panel > p,
 .fact-panel p,
 .milestones p,
-.history-row p,
-.badge-card p {
+.history-row p {
   color: var(--brand-muted, #5e7056);
 }
 .topic-card > p {
@@ -188,7 +179,6 @@
 }
 .empty-state p,
 .page-heading p,
-.badge-card p,
 .history-row p,
 .milestones p {
   color: var(--brand-muted, #647556);

@@ -15,4 +15,6 @@ Account personalization extends this world with sky, violet, rose and peach pale
 
 Shared interface colors use semantic `--brand-*` tokens, with the original green as a fallback for the leaf theme. New interface surfaces and interaction states must use these tokens rather than introducing fixed green values. Topic and award artwork palettes remain independent.
 
+The collection uses compact medal illustrations drawn with the existing Lucide icons and flat ribbon shapes, grouped into problems, study habits, experience and discovery. Each medal shows its exact rule, numeric progress and earned state. Group buttons and the status filter keep the larger catalog easy to scan; cards fill four columns on wide screens and one on phones. Earned medals remain permanent; unfinished streaks show the current run.
+
 The Impeccable context launcher could not initialize its engine cache in this sandbox. Product context and craft guidance were read directly. The user's cute, child-friendly brief and confirmed age group govern this implementation.

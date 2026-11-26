@@ -45,6 +45,7 @@ app.use(
   }),
 );
 app.use("/api", async (req, res, next) => {
+  res.set("Cache-Control", "no-store");
   try {
     if (demoEnabled && req.headers["x-mathate-demo"]) {
       const id = z.string().uuid().parse(req.headers["x-mathate-demo"]);

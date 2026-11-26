@@ -29,6 +29,104 @@
   height: 100%;
   object-fit: contain;
 }
+.login-math-symbols {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.login-math-symbol {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  width: var(--symbol-size, 40px);
+  height: var(--symbol-size, 40px);
+  color: var(--symbol-color, #9aaf78);
+  filter: drop-shadow(0 4px 2px #3b563014);
+  transform: translateY(0) rotate(var(--symbol-tilt, 0deg));
+  animation: login-symbol-drift var(--symbol-period, 6s) ease-in-out infinite;
+  animation-delay: var(--symbol-delay, 0s);
+}
+.login-math-symbol svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.login-math-symbol.sky-plus {
+  left: 64%;
+  top: 15%;
+  --symbol-color: #d5b75d;
+  --symbol-tilt: -14deg;
+  --symbol-period: 6.8s;
+}
+.login-math-symbol.sky-times {
+  left: 84%;
+  top: 9%;
+  --symbol-size: 30px;
+  --symbol-color: #9bb681;
+  --symbol-tilt: 13deg;
+  --symbol-delay: -2.2s;
+}
+.login-math-symbol.sky-equals {
+  left: 84%;
+  top: 26%;
+  --symbol-size: 38px;
+  --symbol-color: #d3a27b;
+  --symbol-tilt: 17deg;
+  --symbol-period: 7.2s;
+  --symbol-delay: -3.5s;
+}
+.login-math-symbol.sky-divide {
+  left: 54%;
+  top: 39%;
+  --symbol-size: 33px;
+  --symbol-color: #92b7b1;
+  --symbol-tilt: -12deg;
+  --symbol-delay: -1.4s;
+}
+.login-math-symbol.sky-minus {
+  left: 12%;
+  top: 48%;
+  --symbol-size: 33px;
+  --symbol-color: #c4ac76;
+  --symbol-tilt: -18deg;
+  --symbol-period: 7.6s;
+  --symbol-delay: -4.1s;
+}
+.login-math-symbol.ground-plus {
+  left: 88%;
+  top: 85%;
+  --symbol-size: 44px;
+  --symbol-color: #a4b97f;
+  --symbol-tilt: 15deg;
+  --symbol-period: 7s;
+  --symbol-delay: -2s;
+}
+.login-math-symbol.ground-equals {
+  left: 60%;
+  top: 91%;
+  --symbol-size: 40px;
+  --symbol-color: #bfa261;
+  --symbol-tilt: -14deg;
+  --symbol-delay: -3.2s;
+}
+.login-math-symbol.ground-divide {
+  left: 75%;
+  top: 82%;
+  --symbol-size: 33px;
+  --symbol-color: #89a981;
+  --symbol-tilt: 11deg;
+  --symbol-period: 7.4s;
+  --symbol-delay: -4.6s;
+}
+@keyframes login-symbol-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--symbol-tilt, 0deg));
+  }
+  50% {
+    transform: translateY(-9px) rotate(calc(var(--symbol-tilt, 0deg) + 5deg));
+  }
+}
 .login-mascot-friend[data-character="mimo"] {
   z-index: 1;
   right: 2%;
@@ -120,6 +218,39 @@
   }
 }
 @media (max-width: 760px) {
+  .login-math-symbols .login-math-symbol {
+    --symbol-size: 24px;
+  }
+  .login-math-symbol.sky-plus {
+    left: 8%;
+    top: 4%;
+  }
+  .login-math-symbol.sky-times {
+    left: 51%;
+    top: 1%;
+  }
+  .login-math-symbol.sky-equals {
+    left: 60%;
+    top: 18%;
+  }
+  .login-math-symbol.sky-divide {
+    left: 40%;
+    top: 11%;
+  }
+  .login-math-symbol.sky-minus {
+    display: none;
+  }
+  .login-math-symbol.ground-plus {
+    left: 87%;
+    top: 91%;
+  }
+  .login-math-symbol.ground-equals {
+    left: 52%;
+    top: 91%;
+  }
+  .login-math-symbol.ground-divide {
+    display: none;
+  }
   .login-world.login-world-group {
     min-height: 0;
     padding: 25px 25px 18px;
@@ -179,7 +310,8 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .login-mascot-friend {
+  .login-mascot-friend,
+  .login-math-symbol {
     animation: none;
   }
 }

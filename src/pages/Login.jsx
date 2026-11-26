@@ -145,7 +145,7 @@ export default function Login() {
             <Sparkles size={25} />
           </span>
           <h2>
-            {register ? "Bắt đầu hành trình nhỏ" : copy("Mimo chờ bạn mãi!")}
+            {register ? "Bắt đầu hành trình nhỏ" : copy("Mathate chờ bạn mãi!")}
           </h2>
           <p>
             {register
@@ -188,7 +188,7 @@ export default function Login() {
             {register && (
               <label>
                 {copy(
-                  "\n                Bạn muốn Mimo gọi là gì?\n                ",
+                  "\n                Bạn muốn Mathate gọi là gì?\n                ",
                 )}
                 <input
                   autoComplete="nickname"

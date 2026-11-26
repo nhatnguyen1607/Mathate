@@ -1,5 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  initializeAuth,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  browserPopupRedirectResolver,
+} from "firebase/auth";
 const app = initializeApp({
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -10,4 +16,13 @@ const app = initializeApp({
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 });
 // Analytics is deliberately opt-in for a children's product.
-export const auth = getAuth(app);
+// Firebase persists the JWT access token and refresh token together, and rotates
+// them through its SDK. Keep one authoritative session rather than token copies.
+export const auth = initializeAuth(app, {
+  persistence: [
+    indexedDBLocalPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence,
+  ],
+  popupRedirectResolver: browserPopupRedirectResolver,
+});

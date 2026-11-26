@@ -96,6 +96,8 @@ Express phục vụ cả API và `dist`. Mặc định chỉ nhận kết nối 
 
 ## Cấu trúc
 
+Phiên đăng nhập dùng JWT và refresh token của Firebase SDK: [cơ chế lưu và gia hạn phiên](docs/AUTH.md). Bộ sưu tập gồm 24 huy chương theo quy tắc chung: [các mốc và cách thêm huy chương](docs/ACHIEVEMENTS.md).
+
 ```text
 src/                  React UI, Auth, chat, giọng đọc
 server/app.js         API, auth middleware, quản trị, phiên học
